@@ -35,9 +35,20 @@ type ToDo struct {
 	Complete bool      `json:"complete"`
 }
 
-// func (td *ToDo) Validate() error {
-// 	if td.Title
-// }
+func ToDoFromCLI(id *string, title *string, priority *string, complete *bool) (ToDo, error) {
+	uuid, err := uuid.Parse(*id)
+	if err != nil {
+		return ToDo{}, err
+	}
+	if *title == "" {
+		return ToDo{}, &todoerrors.ValidationError{Field: *title, Err: errors.New("title is required")}
+	}
+	p, err := ParsePriority(*priority)
+	if err != nil {
+		return ToDo{}, &todoerrors.ValidationError{Field: *priority, Err: err}
+	}
+	return ToDo{Id: uuid, Title: *title, Priority: p, Complete: *complete}, nil
+}
 
 type CreateListRequest struct {
 	Title string `json:"title"`

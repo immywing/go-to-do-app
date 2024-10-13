@@ -9,16 +9,23 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+	"to-do-app/apiclient"
 	todoerrors "to-do-app/errors"
-	inmem "to-do-app/inmem"
 	"to-do-app/logging"
 	"to-do-app/models"
 
 	"github.com/google/uuid"
 )
 
+var startServer = flag.Bool("start-server", false, "Start the To-Do server")
 var mode = flag.String("mode", "", "set the mode the application should run in (in-mem, json-store, pgdb)")
-
+var post = flag.Bool("post", false, "Add new Todo")
+var put = flag.Bool("put", false, "updateTodo")
+var get = flag.Bool("get", false, "Get existing Todo")
+var id = flag.String("id", "", "UUID of ToDo item")
+var title = flag.String("title", "", "Title of ToDo item")
+var priority = flag.String("priority", "", "Priority of ToDo item")
+var complete = flag.Bool("complete", false, "Completion status of ToDo item")
 var datastore models.DataStore
 
 func writeJSONResponse(w http.ResponseWriter, statusCode int, data []byte) {
@@ -113,26 +120,46 @@ func ToDoHandler(w http.ResponseWriter, r *http.Request) {
 
 func run() {
 	flag.Parse()
-	if *mode == "" {
-		fmt.Fprintln(os.Stderr, "Error: application must be provided one of the following modes using --mode=<in-mem|json-store|pgdb>")
-		flag.Usage()
-		os.Exit(1)
-	}
+	todoflags := map[string]interface{}{"id": *id, "title": *title, "priority": *priority, "complete": *complete}
 	if *mode == "pgdb" || *mode == "json-store" {
 		fmt.Fprintf(os.Stderr, "Error: the mode '%s' is not yet implemented\n", *mode)
 		os.Exit(1)
 	}
 	if *mode == "in-mem" {
-		inmem.Run(&datastore)
+		datastore = models.NewInMemDataStore()
+	}
+	if *startServer {
+		http.HandleFunc("/v1/todo/swagger.yaml", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, "to-do-app-api-v1.yaml")
+		})
+		http.HandleFunc("/swagger-ui", swaggerUI)
+		http.HandleFunc("/v1/todo", ToDoHandler)
+		http.ListenAndServe(":8081", nil)
+	}
+	var item models.ToDo
+	ctx := logging.AddTraceID(context.Background())
+	client := apiclient.NewAPIClient("http://localhost:8081/v1/todo")
+	if serverup, err := client.PingServer(); !serverup || err != nil {
+		logging.LogWithTrace(ctx, todoflags, "failed to ping server. Use --start-server to run.")
+	}
+	if *post || *put {
+		var err error
+		item, err = models.ToDoFromCLI(id, title, priority, complete)
+		if err != nil {
+			logging.LogWithTrace(ctx, todoflags, err.Error())
+		}
+	}
+	if *post {
+		client.Send(ctx, item, "POST")
+	}
+	if *put {
+		client.Send(ctx, item, "POST")
+	}
+	if *get {
+		client.Get(ctx, *id)
 	}
 }
 
 func main() {
-	go run()
-	http.HandleFunc("/swagger.yaml", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "to-do-app-api-v1.yaml")
-	})
-	http.HandleFunc("/swagger-ui", swaggerUI)
-	http.HandleFunc("/v1/todo", ToDoHandler)
-	http.ListenAndServe(":8081", nil)
+	run()
 }
