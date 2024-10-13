@@ -28,8 +28,9 @@ var priority = flag.String("priority", "", "Priority of ToDo item")
 var complete = flag.Bool("complete", false, "Completion status of ToDo item")
 var datastore models.DataStore
 
-func writeJSONResponse(w http.ResponseWriter, statusCode int, data []byte) {
-	ctx := logging.AddTraceID(context.Background())
+func writeJSONResponse(w http.ResponseWriter, r *http.Request, statusCode int, data []byte) {
+	// ctx := logging.AddTraceID(context.Background())
+	ctx := r.Context()
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	w.Write(data)
@@ -40,18 +41,18 @@ func writeJSONResponse(w http.ResponseWriter, statusCode int, data []byte) {
 	logging.LogWithTrace(ctx, logData, "Json response Written")
 }
 
-func writeErrorResponse(w http.ResponseWriter, statusCode int, message string) {
-	writeJSONResponse(w, statusCode, []byte(fmt.Sprintf(`{"error": %s}`, message)))
+func writeErrorResponse(w http.ResponseWriter, r *http.Request, statusCode int, message string) {
+	writeJSONResponse(w, r, statusCode, []byte(fmt.Sprintf(`{"error": %s}`, message)))
 }
 
-func handleDataStoreError(w http.ResponseWriter, err error) {
+func handleDataStoreError(w http.ResponseWriter, r *http.Request, err error) {
 	switch e := err.(type) {
 	case *todoerrors.NotFoundError:
-		writeErrorResponse(w, http.StatusNotFound, e.Message)
+		writeErrorResponse(w, r, http.StatusNotFound, e.Message)
 	case *todoerrors.ValidationError:
-		writeErrorResponse(w, http.StatusBadRequest, e.Error())
+		writeErrorResponse(w, r, http.StatusBadRequest, e.Error())
 	default:
-		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
+		writeErrorResponse(w, r, http.StatusInternalServerError, "Internal server error")
 	}
 }
 
@@ -66,45 +67,45 @@ func postputToDo(w http.ResponseWriter, r *http.Request, f func(item models.ToDo
 	item := models.ToDo{}
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		writeErrorResponse(w, http.StatusBadRequest, "Expected Json in request body")
+		writeErrorResponse(w, r, http.StatusBadRequest, "Expected Json in request body")
 		return
 	}
 	err = json.Unmarshal(body, &item)
 	if err != nil {
 		fmt.Println(err, body)
-		writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("Invalid JSON format: %s", err.Error()))
+		writeErrorResponse(w, r, http.StatusBadRequest, fmt.Sprintf("Invalid JSON format: %s", err.Error()))
 		return
 	}
 	item, err = f(item)
 	if err != nil {
-		handleDataStoreError(w, err)
+		handleDataStoreError(w, r, err)
 		return
 	}
 	resp, err := json.Marshal(item)
 	if err != nil {
-		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		writeErrorResponse(w, r, http.StatusInternalServerError, "Internal Server Error")
 	}
-	writeJSONResponse(w, http.StatusCreated, resp)
+	writeJSONResponse(w, r, http.StatusCreated, resp)
 }
 
 func getToDo(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		writeErrorResponse(w, http.StatusBadRequest, "missing 'id' query paramater")
+		writeErrorResponse(w, r, http.StatusBadRequest, "missing 'id' query paramater")
 	}
 	uuid, err := uuid.Parse(id)
 	if err != nil {
-		writeErrorResponse(w, http.StatusBadGateway, fmt.Sprintf("error parsing uuid: %s", err.Error()))
+		writeErrorResponse(w, r, http.StatusBadGateway, fmt.Sprintf("error parsing uuid: %s", err.Error()))
 	}
 	item, err := datastore.GetItem(uuid)
 	if err != nil {
-		handleDataStoreError(w, err)
+		handleDataStoreError(w, r, err)
 	}
 	resp, err := json.Marshal(item)
 	if err != nil {
-		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		writeErrorResponse(w, r, http.StatusInternalServerError, "Internal Server Error")
 	}
-	writeJSONResponse(w, http.StatusCreated, resp)
+	writeJSONResponse(w, r, http.StatusCreated, resp)
 }
 
 func ToDoHandler(w http.ResponseWriter, r *http.Request) {
