@@ -54,7 +54,9 @@ func run() {
 			)
 			os.Exit(1)
 		}
-		server.Start(&store)
+		shutdownChan := make(chan bool)
+		server.WireEndpoints()
+		server.Start(&store, shutdownChan)
 	}
 	var item models.ToDo
 	ctx := logging.AddTraceID(context.Background())

@@ -1,11 +1,13 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
 	"net/http"
+	"time"
 	datastores "to-do-app/datastores"
 	todoerrors "to-do-app/errors"
 	"to-do-app/logging"
@@ -20,14 +22,33 @@ var (
 	// postputErrorChan  = make(chan error)
 )
 
-func Start(store *datastores.DataStore) {
-	datastore = *store
+func WireEndpoints() {
 	http.HandleFunc("/v1/todo/swagger.yaml", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "to-do-app-api-v1.yaml")
 	})
 	http.HandleFunc("/swagger-ui", swaggerUI)
 	http.HandleFunc("/v1/todo", ToDoHandler)
-	http.ListenAndServe(":8081", nil)
+}
+
+func Start(store *datastores.DataStore, shutdownChan chan bool) {
+	datastore = *store
+	srv := &http.Server{
+		Addr: ":8081",
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("ListenAndServe error: %v\n", err)
+		}
+	}()
+	<-shutdownChan
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		fmt.Printf("Server Shutdown error: %v\n", err)
+	} else {
+		fmt.Println("Server shut down gracefully")
+	}
 }
 
 func writeJSONResponse(w http.ResponseWriter, r *http.Request, statusCode int, data []byte) {
