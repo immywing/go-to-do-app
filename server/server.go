@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"io"
 	"net/http"
-	"time"
 	todoerrors "to-do-app/errors"
 	"to-do-app/logging"
 	"to-do-app/models"
@@ -14,7 +13,11 @@ import (
 	"github.com/google/uuid"
 )
 
-var datastore models.DataStore
+var (
+	datastore models.DataStore
+	// postputResultChan = make(chan models.ToDo)
+	// postputErrorChan  = make(chan error)
+)
 
 func Start(store *models.DataStore) {
 	datastore = *store
@@ -72,27 +75,27 @@ func PostputToDo(w http.ResponseWriter, r *http.Request, f func(item models.ToDo
 		writeErrorResponse(w, r, http.StatusBadRequest, fmt.Sprintf("Invalid JSON format: %s", err.Error()))
 		return
 	}
-	resultChan := make(chan models.ToDo)
-	errorChan := make(chan error)
+	postputResultChan := make(chan models.ToDo)
+	postputErrorChan := make(chan error)
 	go func() {
 		item, err := f(item)
 		if err != nil {
-			errorChan <- err
+			postputErrorChan <- err
 			return
 		}
-		resultChan <- item
+		postputResultChan <- item
 	}()
 	select {
-	case item := <-resultChan:
+	case item := <-postputResultChan:
 		resp, err := json.Marshal(item)
 		if err != nil {
 			writeErrorResponse(w, r, http.StatusInternalServerError, "Internal Server Error")
 		}
 		writeJSONResponse(w, r, http.StatusCreated, resp)
-	case err := <-errorChan:
+	case err := <-postputErrorChan:
 		handleDataStoreError(w, r, err)
-	case <-time.After(time.Second * 10):
-		writeErrorResponse(w, r, http.StatusGatewayTimeout, "Request timed out")
+		// case <-time.After(time.Second * 10):
+		// 	writeErrorResponse(w, r, http.StatusGatewayTimeout, "Request timed out")
 	}
 }
 

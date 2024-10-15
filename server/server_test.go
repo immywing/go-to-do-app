@@ -5,65 +5,60 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand/v2"
 	"net/http"
 	"sync"
 	"testing"
 	"to-do-app/models"
+	"to-do-app/server"
 
 	"github.com/google/uuid"
 )
 
 func TestConcurrentPutRequests(t *testing.T) {
 	datastore := models.NewInMemDataStore()
-	uuid := uuid.New()
-	title := "test item"
-	priority := "High"
-	itemA := models.ToDo{Id: uuid, Title: title, Priority: priority, Complete: false}
-	itemB := models.ToDo{Id: uuid, Title: title, Priority: priority, Complete: true}
-	bodyA, err := json.Marshal(itemA)
-	if err != nil {
-		t.Errorf("Failed to marshal item: %v", err)
-		return
+	items := make([]models.ToDo, 0)
+	statuses := []bool{true, false}
+	priorities := []string{models.PriorityLow, models.PriorityMedium, models.PriorityHigh}
+	for i := 0; i < 10; i++ {
+		items = append(items, models.ToDo{Id: uuid.New(), Title: "test", Priority: "High", Complete: false})
 	}
-	bodyB, err := json.Marshal(itemB)
-	if err != nil {
-		t.Errorf("Failed to marshal item: %v", err)
-		return
+	for _, item := range items {
+		datastore.AddItem(item)
 	}
-	datastore.AddItem(itemA)
+	go server.Start(&datastore)
 
 	var wg sync.WaitGroup
-	numRequests := 1000
-	var actual models.ToDo
-	for i := 0; i < numRequests; i++ {
+	numRequests := 10000
+	for i := 1; i < numRequests; i++ {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			var expected models.ToDo
-			var body []byte
-			if i%2 == 0 {
-				expected = itemA
-				body = bodyA
-			} else {
-				expected = itemB
-				body = bodyB
+			var actual models.ToDo
+			expected := items[rand.IntN(len(items))]
+			expected.Priority = priorities[rand.IntN(len(statuses))]
+			expected.Complete = statuses[rand.IntN(len(statuses))]
+			body, err := json.Marshal(expected)
+			if err != nil {
+				// error marshalling struct
 			}
 			client := http.Client{}
-			req, err := http.NewRequest("POST", "http://localhost:8081/v1/todo", bytes.NewBuffer(body))
+			req, err := http.NewRequest("PUT", "http://localhost:8081/v1/todo", bytes.NewBuffer(body))
 			if err != nil {
+				fmt.Println("Error performing PUT request:", err)
 				return
 			}
 			req.Header.Set("Accept", "application/json")
 			resp, err := client.Do(req)
 			if err != nil {
-				fmt.Println("Error performing POST request:", err)
+				// fmt.Println("Error performing PUT request:", err)
 				return
 			}
 			defer resp.Body.Close()
 			respbody, err := io.ReadAll(resp.Body)
 			err = json.Unmarshal(respbody, &actual)
 			if err != nil {
-				t.Errorf("Error unmarshalling response from server")
+				// t.Errorf("Error unmarshalling response from server")
 			}
 			if actual != expected {
 				t.Errorf("Expected : %+v, Got: %+v", expected, actual)

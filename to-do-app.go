@@ -69,4 +69,5 @@ func run() {
 
 func main() {
 	run()
+	// fmt.Println(rand.IntN(20))
 }

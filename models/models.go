@@ -62,7 +62,7 @@ type DataStore interface {
 
 type inMemDatastore struct {
 	Items map[uuid.UUID]ToDo
-	mut   sync.RWMutex
+	mut   sync.Mutex
 }
 
 func (ds *inMemDatastore) AddItem(item ToDo) (ToDo, error) {
@@ -77,7 +77,7 @@ func (ds *inMemDatastore) AddItem(item ToDo) (ToDo, error) {
 	}
 	item.Priority = p
 	ds.Items[item.Id] = item
-	return item, nil
+	return ds.Items[item.Id], nil
 }
 
 func (ds *inMemDatastore) GetItem(itemId uuid.UUID) (ToDo, error) {
@@ -100,7 +100,7 @@ func (ds *inMemDatastore) UpdateItem(item ToDo) (ToDo, error) {
 		return ToDo{}, &todoerrors.ValidationError{Field: item.Priority, Err: err}
 	}
 	item.Priority = p
-	if item, exists := ds.Items[item.Id]; exists {
+	if _, exists := ds.Items[item.Id]; exists {
 		ds.Items[item.Id] = item
 		return ds.Items[item.Id], nil
 	}
@@ -108,5 +108,5 @@ func (ds *inMemDatastore) UpdateItem(item ToDo) (ToDo, error) {
 }
 
 func NewInMemDataStore() DataStore {
-	return &inMemDatastore{Items: make(map[uuid.UUID]ToDo), mut: sync.RWMutex{}}
+	return &inMemDatastore{Items: make(map[uuid.UUID]ToDo), mut: sync.Mutex{}}
 }
