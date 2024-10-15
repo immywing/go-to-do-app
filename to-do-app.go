@@ -5,7 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"to-do-app/apiclient"
+	"to-do-app/datastores"
 	"to-do-app/logging"
 	"to-do-app/models"
 	"to-do-app/server"
@@ -21,18 +23,29 @@ var (
 	title       = flag.String("title", "", "Title of ToDo item")
 	priority    = flag.String("priority", "", "Priority of ToDo item")
 	complete    = flag.Bool("complete", false, "Completion status of ToDo item")
+	jsonPath    = flag.String("json", "", "filepath of json file to use as datastore")
 )
 
 func run() {
 	flag.Parse()
 	todoflags := map[string]interface{}{"id": *id, "title": *title, "priority": *priority, "complete": *complete}
 	if *startServer {
-		var store models.DataStore
-		if *mode == "pgdb" || *mode == "json-store" {
+		var store datastores.DataStore
+		if *mode == "pgdb" {
 			fmt.Fprintf(os.Stderr, "Error: the mode '%s' is not yet implemented\n", *mode)
 			os.Exit(1)
 		} else if *mode == "in-mem" {
-			store = models.NewInMemDataStore()
+			store = datastores.NewInMemDataStore()
+		} else if *mode == "json-store" {
+			if filepath.Ext(*jsonPath) != ".json" {
+				logging.LogWithTrace(
+					context.Background(),
+					map[string]interface{}{"path": *jsonPath},
+					"no valid path to json file provided",
+				)
+				os.Exit(1)
+			}
+			store = datastores.NewJsonDatastore(*jsonPath)
 		} else {
 			logging.LogWithTrace(
 				context.Background(),

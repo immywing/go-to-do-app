@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	datastores "to-do-app/datastores"
 	todoerrors "to-do-app/errors"
 	"to-do-app/logging"
 	"to-do-app/models"
@@ -14,12 +15,12 @@ import (
 )
 
 var (
-	datastore models.DataStore
+	datastore datastores.DataStore
 	// postputResultChan = make(chan models.ToDo)
 	// postputErrorChan  = make(chan error)
 )
 
-func Start(store *models.DataStore) {
+func Start(store *datastores.DataStore) {
 	datastore = *store
 	http.HandleFunc("/v1/todo/swagger.yaml", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "to-do-app-api-v1.yaml")

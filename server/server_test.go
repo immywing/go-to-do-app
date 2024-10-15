@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"sync"
 	"testing"
+	"to-do-app/datastores"
 	"to-do-app/models"
 	"to-do-app/server"
 
@@ -16,7 +17,7 @@ import (
 )
 
 func TestConcurrentPutRequests(t *testing.T) {
-	datastore := models.NewInMemDataStore()
+	datastore := datastores.NewInMemDataStore()
 	items := make([]models.ToDo, 0)
 	statuses := []bool{true, false}
 	priorities := []string{models.PriorityLow, models.PriorityMedium, models.PriorityHigh}
