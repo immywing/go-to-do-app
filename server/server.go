@@ -35,7 +35,6 @@ func Start(store *datastores.DataStore, shutdownChan chan bool) {
 	srv := &http.Server{
 		Addr: ":8081",
 	}
-
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			fmt.Printf("ListenAndServe error: %v\n", err)
@@ -97,28 +96,38 @@ func PostputToDo(w http.ResponseWriter, r *http.Request, f func(item models.ToDo
 		writeErrorResponse(w, r, http.StatusBadRequest, fmt.Sprintf("Invalid JSON format: %s", err.Error()))
 		return
 	}
-	postputResultChan := make(chan models.ToDo)
-	postputErrorChan := make(chan error)
-	go func() {
-		item, err := f(item)
-		if err != nil {
-			postputErrorChan <- err
-			return
-		}
-		postputResultChan <- item
-	}()
-	select {
-	case item := <-postputResultChan:
-		resp, err := json.Marshal(item)
-		if err != nil {
-			writeErrorResponse(w, r, http.StatusInternalServerError, "Internal Server Error")
-		}
-		writeJSONResponse(w, r, http.StatusCreated, resp)
-	case err := <-postputErrorChan:
+	// postputResultChan := make(chan models.ToDo)
+	// postputErrorChan := make(chan error)
+	// go func() {
+	// 	item, err := f(item)
+	// 	if err != nil {
+	// 		postputErrorChan <- err
+	// 		return
+	// 	}
+	// 	postputResultChan <- item
+	// }()
+	// select {
+	// case item := <-postputResultChan:
+	// 	resp, err := json.Marshal(item)
+	// 	if err != nil {
+	// 		writeErrorResponse(w, r, http.StatusInternalServerError, "Internal Server Error")
+	// 	}
+	// 	writeJSONResponse(w, r, http.StatusCreated, resp)
+	// case err := <-postputErrorChan:
+	// 	handleDataStoreError(w, r, err)
+	// case <-time.After(time.Second * 10):
+	// 	writeErrorResponse(w, r, http.StatusGatewayTimeout, "Request timed out")
+	// }
+	item, err = f(item)
+	if err != nil {
 		handleDataStoreError(w, r, err)
-		// case <-time.After(time.Second * 10):
-		// 	writeErrorResponse(w, r, http.StatusGatewayTimeout, "Request timed out")
+		return
 	}
+	resp, err := json.Marshal(item)
+	if err != nil {
+		writeErrorResponse(w, r, http.StatusInternalServerError, "Internal Server Error")
+	}
+	writeJSONResponse(w, r, http.StatusCreated, resp)
 }
 
 func getToDo(w http.ResponseWriter, r *http.Request) {
