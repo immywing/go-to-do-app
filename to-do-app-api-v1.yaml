@@ -2,9 +2,9 @@ swagger: "2.0"
 info:
   description: "To Do App"
   version: "1.0.0"
-  title: "To Do App v1"
+  title: "To Do App"
 host: "localhost:8081"
-basePath: "/v1"
+basePath: "/"
 tags:
 - name: "ToDos"
   description: "Everything to manage your ToDos"
@@ -73,6 +73,12 @@ paths:
         required: true
         type: "string"
         format: "uuid"
+      - name: "user_id"
+        in: "query"
+        description: "ID of the user associated with the ToDo"
+        required: true
+        type: "string"
+        format: "uuid"
       responses:
         "200":
           description: "Successful response"
@@ -86,15 +92,22 @@ definitions:
   ToDo:
     type: "object"
     required:
+    - "id"
+    - "user_id"
     - "title"
-    - "status"
+    - "priority"
+    - "complete"
     properties:
       id:
         type: "string"
         format: "uuid"
+      user_id:
+        type: "string"
+        format: "uuid"
+        description: "ID of the user associated with the ToDo"
       title:
         type: "string"
-        example: "Complete ToDo App V1"
+        example: "Complete ToDo App"
       priority:
         type: "string"
         description: "Priority of the ToDo"

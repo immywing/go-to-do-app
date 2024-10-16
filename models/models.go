@@ -32,6 +32,7 @@ type ToDo struct {
 	Title    string    `json:"title"`
 	Priority priority  `json:"priority"`
 	Complete bool      `json:"complete"`
+	UserId   string    `json:"user_id"`
 }
 
 func ToDoFromCLI(id *string, title *string, priority *string, complete *bool) (ToDo, error) {

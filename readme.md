@@ -27,3 +27,10 @@ To see a full list of flags available to the CLI use `go run . -h`
 ## API
 
 <pr>The API spec can found at http://localhost:8081/swagger-ui</pr>
+
+## Key Design Decisions
+
+### Phase 3
+
+- Approaching the update to the api as a breaking change.
+- Treating updates as specific to a user id. User "123" is not able to access or update items from their ownership to another user. Nor can they access items belonging to another user.

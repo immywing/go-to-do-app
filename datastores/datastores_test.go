@@ -34,9 +34,10 @@ func TestInMemUpdateToDo(t *testing.T) {
 func TestInMemGetToDo(t *testing.T) {
 	store := datastores.NewInMemDataStore()
 	id := uuid.New()
-	expected := models.ToDo{Id: id, Title: "test", Priority: "Low", Complete: false}
+	userId := uuid.New()
+	expected := models.ToDo{Id: id, Title: "test", Priority: "Low", Complete: false, UserId: userId.String()}
 	store.AddItem(expected)
-	actual, err := store.GetItem(id)
+	actual, err := store.GetItem(userId.String(), id)
 	if err != nil {
 		t.Errorf("datastore unable to find item that was created with uuid: %s", id)
 	}

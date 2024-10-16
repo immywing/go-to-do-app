@@ -23,11 +23,11 @@ var (
 )
 
 func WireEndpoints() {
-	http.HandleFunc("/v1/todo/swagger.yaml", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/swagger.yaml", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "to-do-app-api-v1.yaml")
 	})
 	http.HandleFunc("/swagger-ui", swaggerUI)
-	http.HandleFunc("/v1/todo", ToDoHandler)
+	http.HandleFunc("/todo", ToDoHandler)
 }
 
 func Start(store *datastores.DataStore, shutdownChan chan bool) {
@@ -132,14 +132,18 @@ func PostputToDo(w http.ResponseWriter, r *http.Request, f func(item models.ToDo
 
 func getToDo(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
+	userId := r.URL.Query().Get("user_id")
 	if id == "" {
 		writeErrorResponse(w, r, http.StatusBadRequest, "missing 'id' query paramater")
+	}
+	if userId == "" {
+		writeErrorResponse(w, r, http.StatusBadRequest, "missing 'user_id' query paramater")
 	}
 	uuid, err := uuid.Parse(id)
 	if err != nil {
 		writeErrorResponse(w, r, http.StatusBadGateway, fmt.Sprintf("error parsing uuid: %s", err.Error()))
 	}
-	item, err := datastore.GetItem(uuid)
+	item, err := datastore.GetItem(userId, uuid)
 	if err != nil {
 		handleDataStoreError(w, r, err)
 	}

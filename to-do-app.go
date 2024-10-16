@@ -60,7 +60,7 @@ func run() {
 	}
 	var item models.ToDo
 	ctx := logging.AddTraceID(context.Background())
-	client := apiclient.NewAPIClient("http://localhost:8081/v1/todo")
+	client := apiclient.NewAPIClient("http://localhost:8081/")
 	if serverup, err := client.PingServer(); !serverup || err != nil {
 		logging.LogWithTrace(ctx, todoflags, "failed to ping server. Use --start-server to run.")
 	}
@@ -72,10 +72,10 @@ func run() {
 		}
 	}
 	if *post {
-		client.Send(ctx, item, "POST")
+		client.Send(ctx, item, "POST", "v1")
 	}
 	if *put {
-		client.Send(ctx, item, "POST")
+		client.Send(ctx, item, "POST", "v1")
 	}
 	if *get {
 		client.Get(ctx, *id)

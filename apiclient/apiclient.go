@@ -24,7 +24,8 @@ func (c *APIClient) Get(ctx context.Context, id string) {
 	if err != nil {
 		logging.LogWithTrace(ctx, map[string]interface{}{"uuid": uuid}, err.Error())
 	}
-	url := fmt.Sprintf("%s?id=%s", c.BaseURL, id)
+	temp := "todo"
+	url := fmt.Sprintf("%s?id=%s", c.BaseURL+temp, id)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		fmt.Println("Error creating request:", err)
@@ -50,12 +51,13 @@ func (c *APIClient) Get(ctx context.Context, id string) {
 	logging.LogWithTrace(ctx, logData, "GET request from CLI")
 }
 
-func (c *APIClient) Send(ctx context.Context, item models.ToDo, method string) {
+func (c *APIClient) Send(ctx context.Context, item models.ToDo, method string, version string) {
 	body, err := json.Marshal(item)
 	if err != nil {
 		//
 	}
-	req, err := http.NewRequest(method, c.BaseURL, bytes.NewBuffer(body))
+	temp := "todo"
+	req, err := http.NewRequest(method, fmt.Sprintf("%s%s", c.BaseURL, temp), bytes.NewBuffer(body))
 	if err != nil {
 		logging.LogWithTrace(
 			ctx, map[string]interface{}{"header": req.Header, "body": req.Body}, "Failed request")
@@ -78,12 +80,12 @@ func (c *APIClient) Send(ctx context.Context, item models.ToDo, method string) {
 		"statusCode":   resp.StatusCode,
 		"responseBody": string(body),
 	}
-	logging.LogWithTrace(ctx, logData, fmt.Sprintf("POST request from CLI"))
+	logging.LogWithTrace(ctx, logData, "POST request from CLI")
 }
 
 func (c *APIClient) PingServer() (bool, error) {
 	c.httpClient.Timeout = 2 * time.Second
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s/%s", c.BaseURL, "swagger.yaml"))
+	resp, err := c.httpClient.Get(c.BaseURL)
 	if err != nil {
 		return false, err
 	}
