@@ -51,7 +51,7 @@ func Start(store *datastores.DataStore, shutdownChan chan bool) {
 }
 
 func writeJSONResponse(w http.ResponseWriter, r *http.Request, statusCode int, data []byte) {
-	ctx := r.Context()
+	ctx := logging.AddTraceID(r.Context())
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	w.Write(data)
@@ -84,7 +84,7 @@ func swaggerUI(w http.ResponseWriter, r *http.Request) {
 
 func PostputToDo(w http.ResponseWriter, r *http.Request, f func(item models.ToDo) (models.ToDo, error)) {
 	w.Header().Set("Content-Type", "application/json")
-	defer r.Body.Close()
+	// defer r.Body.Close()
 	var item models.ToDo
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
