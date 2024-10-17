@@ -25,7 +25,7 @@ func TestConcurrentPutRequests(t *testing.T) {
 	statuses := []bool{true, false}
 	priorities := []string{models.PriorityLow, models.PriorityMedium, models.PriorityHigh}
 	for i := 0; i < 10; i++ {
-		items = append(items, models.ToDo{Id: uuid.New(), Title: "test", Priority: "High", Complete: false})
+		items = append(items, models.ToDo{Id: uuid.New(), Title: "test", Priority: "High", Complete: false, UserId: uuid.New().String()})
 	}
 	server.WireEndpoints()
 	for _, datastore := range stores {
@@ -50,7 +50,7 @@ func TestConcurrentPutRequests(t *testing.T) {
 					// error marshalling struct
 				}
 				client := http.Client{}
-				req, err := http.NewRequest("PUT", "http://localhost:8081/v1/todo", bytes.NewBuffer(body))
+				req, err := http.NewRequest("PUT", "http://localhost:8081/todo", bytes.NewBuffer(body))
 				if err != nil {
 					fmt.Println("Error performing PUT request:", err)
 					return
@@ -65,7 +65,7 @@ func TestConcurrentPutRequests(t *testing.T) {
 				respbody, err := io.ReadAll(resp.Body)
 				err = json.Unmarshal(respbody, &actual)
 				if err != nil {
-					// t.Errorf("Error unmarshalling response from server")
+					t.Errorf("Error unmarshalling response from server")
 				}
 				if actual != expected {
 					t.Errorf("Expected : %+v, Got: %+v", expected, actual)
