@@ -50,7 +50,7 @@ func TestConcurrentPutRequests(t *testing.T) {
 					// error marshalling struct
 				}
 				client := http.Client{}
-				req, err := http.NewRequest("PUT", "http://localhost:8081/todo", bytes.NewBuffer(body))
+				req, err := http.NewRequest("PUT", "http://localhost:8081/v2/todo", bytes.NewBuffer(body))
 				if err != nil {
 					fmt.Println("Error performing PUT request:", err)
 					return
