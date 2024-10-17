@@ -3,7 +3,6 @@ package datastores
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -28,15 +27,14 @@ type inMemDatastore struct {
 func (ds *inMemDatastore) AddItem(item models.ToDo) (models.ToDo, error) {
 	ds.mut.Lock()
 	defer ds.mut.Unlock()
-	if item.Title == "" {
-		return models.ToDo{}, &todoerrors.ValidationError{Field: item.Title, Err: errors.New("invalid title")}
-	}
-	p, err := models.ParsePriority(item.Priority)
-	if err != nil {
-		return models.ToDo{}, &todoerrors.ValidationError{Field: item.Priority, Err: err}
-	}
-	item.Priority = p
-	// ds.Items[item.UserId][item.Id] = item
+	// if item.Title == "" {
+	// 	return models.ToDo{}, &todoerrors.ValidationError{Field: fmt.Sprintf("title: %s", item.Title), Err: errors.New("invalid title")}
+	// }
+	// p, err := models.ParsePriority(item.Priority)
+	// if err != nil {
+	// 	return models.ToDo{}, &todoerrors.ValidationError{Field: fmt.Sprintf("priority: %s", item.Priority), Err: err}
+	// }
+	// item.Priority = p
 	if user, exists := ds.Items[item.UserId]; exists {
 		user[item.Id] = item
 	} else {
@@ -57,14 +55,14 @@ func (ds *inMemDatastore) GetItem(userId string, itemId uuid.UUID) (models.ToDo,
 func (ds *inMemDatastore) UpdateItem(item models.ToDo) (models.ToDo, error) {
 	ds.mut.Lock()
 	defer ds.mut.Unlock()
-	if item.Title == "" {
-		return models.ToDo{}, &todoerrors.ValidationError{Field: item.Title, Err: errors.New("invalid title")}
-	}
-	p, err := models.ParsePriority(item.Priority)
-	if err != nil {
-		return models.ToDo{}, &todoerrors.ValidationError{Field: item.Priority, Err: err}
-	}
-	item.Priority = p
+	// if item.Title == "" {
+	// 	return models.ToDo{}, &todoerrors.ValidationError{Field: item.Title, Err: errors.New("invalid title")}
+	// }
+	// p, err := models.ParsePriority(item.Priority)
+	// if err != nil {
+	// 	return models.ToDo{}, &todoerrors.ValidationError{Field: item.Priority, Err: err}
+	// }
+	// item.Priority = p
 	if user, exists := ds.Items[item.UserId]; exists {
 		if _, iexist := user[item.Id]; iexist {
 			ds.Items[item.UserId][item.Id] = item
@@ -135,14 +133,14 @@ func (ds *JsonDatastore) AddItem(item models.ToDo) (models.ToDo, error) {
 	ds.mut.Lock()
 	defer ds.mut.Unlock()
 	items := LoadJsonStore(ds.fpath)
-	if item.Title == "" {
-		return models.ToDo{}, &todoerrors.ValidationError{Field: item.Title, Err: errors.New("invalid title")}
-	}
-	p, err := models.ParsePriority(item.Priority)
-	if err != nil {
-		return models.ToDo{}, &todoerrors.ValidationError{Field: item.Priority, Err: err}
-	}
-	item.Priority = p
+	// if item.Title == "" {
+	// 	return models.ToDo{}, &todoerrors.ValidationError{Field: item.Title, Err: errors.New("invalid title")}
+	// }
+	// p, err := models.ParsePriority(item.Priority)
+	// if err != nil {
+	// 	return models.ToDo{}, &todoerrors.ValidationError{Field: item.Priority, Err: err}
+	// }
+	// item.Priority = p
 	if user, exists := items[item.UserId]; exists {
 		user[item.Id] = item
 	} else {
@@ -166,14 +164,14 @@ func (ds *JsonDatastore) UpdateItem(item models.ToDo) (models.ToDo, error) {
 	ds.mut.Lock()
 	defer ds.mut.Unlock()
 	items := LoadJsonStore(ds.fpath)
-	if item.Title == "" {
-		return models.ToDo{}, &todoerrors.ValidationError{Field: item.Title, Err: errors.New("invalid title")}
-	}
-	p, err := models.ParsePriority(item.Priority)
-	if err != nil {
-		return models.ToDo{}, &todoerrors.ValidationError{Field: item.Priority, Err: err}
-	}
-	item.Priority = p
+	// if item.Title == "" {
+	// 	return models.ToDo{}, &todoerrors.ValidationError{Field: item.Title, Err: errors.New("invalid title")}
+	// }
+	// p, err := models.ParsePriority(item.Priority)
+	// if err != nil {
+	// 	return models.ToDo{}, &todoerrors.ValidationError{Field: item.Priority, Err: err}
+	// }
+	// item.Priority = p
 	if user, exists := items[item.UserId]; exists {
 		if _, iexist := user[item.Id]; iexist {
 			items[item.UserId][item.Id] = item

@@ -1,0 +1,115 @@
+swagger: "2.0"
+info:
+  description: "To Do App"
+  version: "1.0.0"
+  title: "To Do App"
+host: "localhost:8081"
+basePath: "/"
+tags:
+- name: "ToDos"
+  description: "Everything to manage your ToDos"
+schemes:
+- "http"
+paths:
+  /v1/todo:
+    post:
+      tags:
+      - "ToDos"
+      summary: "Add a new ToDo"
+      description: "Add a ToDo to the store"
+      operationId: "addToDoV1"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ToDo object that needs to be added to the store"
+        required: true
+        schema:
+          $ref: "#/definitions/ToDoV1"
+      responses:
+        "400":
+          description: "Invalid input"
+        "422":
+          description: "Validation exception"
+    put:
+      tags:
+      - "ToDos"
+      summary: "Add or Update an existing ToDo"
+      description: "Add or Update a ToDo in the store"
+      operationId: "updateToDoV1"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "ToDo object that needs to be added or updated"
+        required: true
+        schema:
+          $ref: "#/definitions/ToDoV1"
+      responses:
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "ToDo not found"
+        "422":
+          description: "Validation exception"
+    get:
+      tags:
+      - "ToDos"
+      summary: "Get a ToDo by ID"
+      description: "Retrieve a specific ToDo by its ID"
+      operationId: "getToDoV1"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "id"
+        in: "query"
+        description: "ID of the ToDo to retrieve"
+        required: true
+        type: "string"
+        format: "uuid"
+      responses:
+        "200":
+          description: "Successful response"
+          schema:
+            $ref: "#/definitions/ToDoV1"
+        "400":
+          description: "Invalid ID supplied"
+        "404":
+          description: "ToDo not found"
+
+definitions:
+  ToDoV1:
+    type: "object"
+    required:
+    - "id"
+    - "title"
+    - "priority"
+    - "complete"
+    properties:
+      id:
+        type: "string"
+        format: "uuid"
+      title:
+        type: "string"
+        example: "Complete ToDo App"
+      priority:
+        type: "string"
+        description: "Priority of the ToDo"
+        enum:
+        - "Low"
+        - "Medium"
+        - "High"
+        default: "Medium"
+      complete:
+        type: "boolean"
+        default: false
+
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"

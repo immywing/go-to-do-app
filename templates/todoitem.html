@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item Lookup</title>
+</head>
+<body>
+    {{if .}}
+        <h2>Item Details:</h2>
+        <p><strong>Title:</strong> {{.Title}}</p>
+        <p><strong>Complete:</strong> {{.Complete}}</p>
+    {{end}}
+    <br>
+    <button type="button" onclick="window.location.href='/v2/search'">Search</button>
+</body> 
+</html>

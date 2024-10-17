@@ -17,7 +17,15 @@ const (
 	PriorityHigh   priority = "High"
 )
 
+var (
+	V1 = "v1"
+	V2 = "v2"
+)
+
 func ParsePriority(p string) (priority, error) {
+	if len(p) < 1 {
+		return "", fmt.Errorf("invalid priority: %s. Valid options are: %s, %s, %s", p, PriorityLow, PriorityMedium, PriorityHigh)
+	}
 	p = strings.ToUpper(string(p[0])) + strings.ToLower(p[1:])
 	switch priority(p) {
 	case PriorityLow, PriorityMedium, PriorityHigh:
@@ -32,7 +40,31 @@ type ToDo struct {
 	Title    string    `json:"title"`
 	Priority priority  `json:"priority"`
 	Complete bool      `json:"complete"`
-	UserId   string    `json:"user_id"`
+	UserId   string    `json:"user_id,omitempty"`
+}
+
+func (t *ToDo) Validate(ver string) error {
+	if t.Title == "" {
+		return &todoerrors.ValidationError{Field: t.Title, Err: errors.New("invalid title")}
+	}
+	p, err := ParsePriority(t.Priority)
+	if err != nil {
+		return &todoerrors.ValidationError{Field: t.Priority, Err: err}
+	}
+	t.Priority = p
+	switch ver {
+	case V1:
+		if t.UserId != "" {
+			return &todoerrors.ValidationError{Field: fmt.Sprintf("user_id: %s", t.UserId), Err: errors.New("v1 todo api does not allow user_id")}
+		}
+	case V2:
+		if t.UserId == "" {
+			return &todoerrors.ValidationError{Field: fmt.Sprintf("user_id: %s", t.UserId), Err: errors.New("invalid user_id")}
+		}
+	default:
+		return &todoerrors.NotFoundError{Message: fmt.Sprintf("%d not a valid version", t.Id.Version())}
+	}
+	return nil
 }
 
 func ToDoFromCLI(id *string, title *string, priority *string, complete *bool) (ToDo, error) {

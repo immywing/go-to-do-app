@@ -36,7 +36,7 @@ func TestConcurrentPutRequests(t *testing.T) {
 		go server.Start(&datastore, shutdownChan)
 
 		var wg sync.WaitGroup
-		numRequests := 10000
+		numRequests := 100000
 		for i := 1; i < numRequests; i++ {
 			wg.Add(1)
 			go func(i int) {
@@ -63,6 +63,9 @@ func TestConcurrentPutRequests(t *testing.T) {
 				}
 				defer resp.Body.Close()
 				respbody, err := io.ReadAll(resp.Body)
+				if err != nil {
+					//Todo
+				}
 				err = json.Unmarshal(respbody, &actual)
 				if err != nil {
 					t.Errorf("Error unmarshalling response from server")
