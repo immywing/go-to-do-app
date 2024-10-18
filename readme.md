@@ -4,7 +4,7 @@
 
 ## Quickstart
 
-Current phase of development: 2
+Current phase of development: 3
 
 To see a full list of flags available to the CLI use `go run . -h`
 
@@ -26,14 +26,8 @@ To see a full list of flags available to the CLI use `go run . -h`
 
 ## API
 
-<pr>The API spec can found at http://localhost:8081/swagger-ui</pr>
-
-## Key Design Decisions
-
-### Phase 3
-
-- Approaching the update to the api as a breaking change.
-- Treating updates as specific to a user id. User "123" is not able to access or update items from their ownership to another user. Nor can they access items belonging to another user. That said, at this level of implementation, there is no guard via the CLI or api access, to ensure a user is their assigned user id. 
+- v1 <pr>The API spec can found at http://localhost:8081/v1/swagger-ui</pr>
+- v2 <pr>The API spec can found at http://localhost:8081/v2/swagger-ui</pr>
 
 ## Wishlist
 
