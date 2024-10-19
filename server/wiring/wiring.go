@@ -194,6 +194,7 @@ func Start(store *datastores.DataStore, shutdownChan chan bool) {
 	} else {
 		fmt.Println("Server shut down gracefully")
 	}
+	shutdownChan <- true
 }
 
 func writeJSONResponse(w http.ResponseWriter, r *http.Request, statusCode int, data []byte) {

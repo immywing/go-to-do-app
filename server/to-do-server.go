@@ -65,6 +65,7 @@ func run() {
 	wiring.WireEndpoints()
 	go wiring.Start(&store, shutdownChan) // Start server in a goroutine
 	listenForClose()
+	<-shutdownChan
 }
 
 func main() {
