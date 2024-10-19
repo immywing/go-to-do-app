@@ -10,9 +10,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/immywing/go-to-do-app/to-do-lib/datastores"
-	"github.com/immywing/go-to-do-app/to-do-lib/models"
-	"github.com/immywing/go-to-do-app/to-do-lib/server"
+	"github.com/immywing/go-to-do-app/to-do-lib"
 
 	"github.com/google/uuid"
 )

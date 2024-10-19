@@ -11,10 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/immywing/go-to-do-app/to-do-lib/datastores"
-	"github.com/immywing/go-to-do-app/to-do-lib/logging"
-	"github.com/immywing/go-to-do-app/to-do-lib/models"
-	"github.com/immywing/go-to-do-app/to-do-liberrors"
+	"github.com/immywing/go-to-do-app/to-do-lib"
 
 	"github.com/google/uuid"
 )
