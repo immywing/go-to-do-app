@@ -14,6 +14,19 @@ import (
 	"github.com/google/uuid"
 )
 
+type record struct {
+	mut  sync.Mutex
+	data models.ToDo
+}
+
+func (t *record) Lock() {
+	t.mut.Lock()
+}
+
+func (t *record) Unlock() {
+	t.mut.Unlock()
+}
+
 type DataStore interface {
 	AddItem(item models.ToDo) (models.ToDo, error)
 	GetItem(userId string, itemId uuid.UUID) (models.ToDo, error)
@@ -22,40 +35,37 @@ type DataStore interface {
 }
 
 type inMemDatastore struct {
-	Items map[string]map[uuid.UUID]models.ToDo
+	Items map[string]map[uuid.UUID]*record
 	mut   sync.Mutex
 }
 
 func (ds *inMemDatastore) AddItem(item models.ToDo) (models.ToDo, error) {
-	ds.mut.Lock()
-	defer ds.mut.Unlock()
-
 	if user, exists := ds.Items[item.UserId]; exists {
-		user[item.Id] = item
+		rec := user[item.Id]
+		rec.Lock()
+		defer rec.Unlock()
+		rec.data = item
 	} else {
-		ds.Items[item.UserId] = map[uuid.UUID]models.ToDo{item.Id: item}
+		rec := record{mut: sync.Mutex{}, data: item}
+		ds.Items[item.UserId] = map[uuid.UUID]*record{item.Id: &rec}
 	}
-	return ds.Items[item.UserId][item.Id], nil
+	return ds.Items[item.UserId][item.Id].data, nil
 }
 
 func (ds *inMemDatastore) GetItem(userId string, itemId uuid.UUID) (models.ToDo, error) {
-	ds.mut.Lock()
-	defer ds.mut.Unlock()
 	if item, exists := ds.Items[userId][itemId]; exists {
-		return item, nil
+		return item.data, nil
 	}
 	return models.ToDo{}, &todoerrors.NotFoundError{Message: "ToDo Not Found"}
 }
 
 func (ds *inMemDatastore) UpdateItem(item models.ToDo) (models.ToDo, error) {
-	ds.mut.Lock()
-	defer ds.mut.Unlock()
-
 	if user, exists := ds.Items[item.UserId]; exists {
-		if _, iexist := user[item.Id]; iexist {
-			ds.Items[item.UserId][item.Id] = item
-
-			return ds.Items[item.UserId][item.Id], nil
+		if rec, iexist := user[item.Id]; iexist {
+			rec.Lock()
+			defer rec.Unlock()
+			rec.data = item
+			return ds.Items[item.UserId][item.Id].data, nil
 		}
 	}
 	return models.ToDo{}, &todoerrors.NotFoundError{Message: "ToDo Not Found"}
@@ -66,10 +76,10 @@ func (ds *inMemDatastore) Close() {
 }
 
 func NewInMemDataStore() DataStore {
-	return &inMemDatastore{Items: make(map[string]map[uuid.UUID]models.ToDo), mut: sync.Mutex{}}
+	return &inMemDatastore{Items: make(map[string]map[uuid.UUID]*record), mut: sync.Mutex{}}
 }
 
-func LoadJsonStore(fpath string) map[string]map[uuid.UUID]models.ToDo {
+func LoadJsonStore(fpath string) map[string]map[uuid.UUID]*record {
 	file, err := os.Open(fpath)
 	if err != nil {
 		ctx := context.Background()
@@ -84,9 +94,10 @@ func LoadJsonStore(fpath string) map[string]map[uuid.UUID]models.ToDo {
 		fmt.Println("Error decoding JSON:", err)
 		// 	return
 	}
-	items := make(map[string]map[uuid.UUID]models.ToDo)
+	items := make(map[string]map[uuid.UUID]*record)
 	for _, item := range todos {
-		items[item.UserId] = map[uuid.UUID]models.ToDo{item.Id: item}
+		rec := record{mut: sync.Mutex{}, data: item}
+		items[item.UserId] = map[uuid.UUID]*record{item.Id: &rec}
 		if err != nil {
 			fmt.Errorf("error with todo: %+v", item)
 		}
@@ -96,40 +107,39 @@ func LoadJsonStore(fpath string) map[string]map[uuid.UUID]models.ToDo {
 
 type JsonDatastore struct {
 	fpath string
-	items map[string]map[uuid.UUID]models.ToDo
+	items map[string]map[uuid.UUID]*record
 	mut   sync.Mutex
 }
 
 func (ds *JsonDatastore) AddItem(item models.ToDo) (models.ToDo, error) {
-	ds.mut.Lock()
-	defer ds.mut.Unlock()
-
 	if user, exists := ds.items[item.UserId]; exists {
-		user[item.Id] = item
+		rec := user[item.Id]
+		rec.Lock()
+		defer rec.Unlock()
+		rec.data = item
 	} else {
-		ds.items[item.UserId] = map[uuid.UUID]models.ToDo{item.Id: item}
+		rec := record{mut: sync.Mutex{}, data: item}
+		ds.items[item.UserId] = map[uuid.UUID]*record{item.Id: &rec}
+		ds.Close()
 	}
-	return ds.items[item.UserId][item.Id], nil
+	return ds.items[item.UserId][item.Id].data, nil
 }
 
 func (ds *JsonDatastore) GetItem(userId string, itemId uuid.UUID) (models.ToDo, error) {
-	ds.mut.Lock()
-	defer ds.mut.Unlock()
-
-	if item, exists := ds.items[userId][itemId]; exists {
-		return item, nil
+	if rec, exists := ds.items[userId][itemId]; exists {
+		return rec.data, nil
 	}
 	return models.ToDo{}, &todoerrors.NotFoundError{Message: "ToDo Not Found"}
 }
 
 func (ds *JsonDatastore) UpdateItem(item models.ToDo) (models.ToDo, error) {
-	ds.mut.Lock()
-	defer ds.mut.Unlock()
-
 	if user, exists := ds.items[item.UserId]; exists {
-		if _, iexist := user[item.Id]; iexist {
-			ds.items[item.UserId][item.Id] = item
-			return ds.items[item.UserId][item.Id], nil
+		if rec, iexist := user[item.Id]; iexist {
+			rec.Lock()
+			defer rec.Unlock()
+			rec.data = item
+			ds.Close()
+			return ds.items[item.UserId][item.Id].data, nil
 		}
 	}
 	return models.ToDo{}, &todoerrors.NotFoundError{Message: "ToDo Not Found"}
@@ -139,7 +149,7 @@ func (ds *JsonDatastore) Close() {
 	items := make([]models.ToDo, 0)
 	for _, user := range ds.items {
 		for _, item := range user {
-			items = append(items, item)
+			items = append(items, item.data)
 		}
 	}
 	bytes, err := json.MarshalIndent(items, "", "  ")
@@ -147,8 +157,6 @@ func (ds *JsonDatastore) Close() {
 		fmt.Println("Error marshalling JSON:", err)
 		return
 	}
-
-	// Write the JSON to the file
 	err = os.WriteFile(ds.fpath, bytes, 0644)
 	if err != nil {
 		fmt.Println("Error writing to file:", err)
