@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 
-	"go-to-do-app/to-do-lib/apiclient"
+	"go-to-do-app/cli/apiclient"
 	"go-to-do-app/to-do-lib/logging"
 	"go-to-do-app/to-do-lib/models"
 )
@@ -18,16 +19,19 @@ var (
 	title    = flag.String("title", "", "Title of ToDo item")
 	priority = flag.String("priority", "", "Priority of ToDo item")
 	complete = flag.Bool("complete", false, "Completion status of ToDo item")
+	version  = flag.String("version", "", "version of the api to use")
 )
 
 func cliParse() {
 	flag.Parse()
+	fmt.Println(*post)
 	todoflags := map[string]interface{}{"user-id": *userId, "id": *id, "title": *title, "priority": *priority, "complete": *complete}
+	fmt.Println(todoflags)
 	var item models.ToDo
 	ctx := logging.AddTraceID(context.Background())
 	client := apiclient.NewAPIClient("http://localhost:8081/")
 	if serverup, err := client.PingServer(); !serverup || err != nil {
-		logging.LogWithTrace(ctx, todoflags, "failed to ping server. Use --start-server to run.")
+		logging.LogWithTrace(ctx, todoflags, "failed to ping server. check server is alive.")
 	}
 	if *post || *put {
 		var err error
@@ -35,15 +39,19 @@ func cliParse() {
 		if err != nil {
 			logging.LogWithTrace(ctx, todoflags, err.Error())
 		}
+		err = item.Validate(*version)
+		if err != nil {
+			logging.LogWithTrace(ctx, todoflags, err.Error())
+		}
 	}
 	if *post {
-		client.Send(ctx, item, "POST", "v1")
+		client.Send(ctx, item, "POST", *version)
 	}
 	if *put {
-		client.Send(ctx, item, "POST", "v1")
+		client.Send(ctx, item, "PUT", *version)
 	}
 	if *get {
-		client.Get(ctx, *id)
+		client.Get(ctx, *id, *userId, *version)
 	}
 }
 

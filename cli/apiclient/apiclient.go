@@ -20,13 +20,12 @@ type APIClient struct {
 	httpClient *http.Client
 }
 
-func (c *APIClient) Get(ctx context.Context, id string) {
+func (c *APIClient) Get(ctx context.Context, id string, user_id string, version string) {
 	uuid, err := uuid.Parse(id)
 	if err != nil {
 		logging.LogWithTrace(ctx, map[string]interface{}{"uuid": uuid}, err.Error())
 	}
-	temp := "todo"
-	url := fmt.Sprintf("%s?id=%s", c.BaseURL+temp, id)
+	url := fmt.Sprintf("%s%s/todo?id=%s&user_id=%s", c.BaseURL, version, id, user_id)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		fmt.Println("Error creating request:", err)
@@ -39,26 +38,22 @@ func (c *APIClient) Get(ctx context.Context, id string) {
 		return
 	}
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		//
-	}
+	body, _ := io.ReadAll(resp.Body)
 	logData := map[string]interface{}{
 		"method":       "GET",
 		"url":          url,
 		"statusCode":   resp.StatusCode,
 		"responseBody": string(body),
+		"error":        err,
 	}
 	logging.LogWithTrace(ctx, logData, "GET request from CLI")
 }
 
 func (c *APIClient) Send(ctx context.Context, item models.ToDo, method string, version string) {
-	body, err := json.Marshal(item)
-	if err != nil {
-		//
-	}
-	temp := "todo"
-	req, err := http.NewRequest(method, fmt.Sprintf("%s%s", c.BaseURL, temp), bytes.NewBuffer(body))
+	body, _ := json.Marshal(item)
+	temp := "/todo"
+	fmt.Println(fmt.Sprintf("%s%s%s", c.BaseURL, version, temp))
+	req, err := http.NewRequest(method, fmt.Sprintf("%s%s%s", c.BaseURL, version, temp), bytes.NewBuffer(body))
 	if err != nil {
 		logging.LogWithTrace(
 			ctx, map[string]interface{}{"header": req.Header, "body": req.Body}, "Failed request")
@@ -71,10 +66,7 @@ func (c *APIClient) Send(ctx context.Context, item models.ToDo, method string, v
 		return
 	}
 	defer resp.Body.Close()
-	body, err = io.ReadAll(resp.Body)
-	if err != nil {
-		//
-	}
+	body, _ = io.ReadAll(resp.Body)
 	logData := map[string]interface{}{
 		"method":       "POST",
 		"url":          c.BaseURL,

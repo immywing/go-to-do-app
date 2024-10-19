@@ -92,9 +92,9 @@ func NewInMemDataStore() DataStore {
 
 func LoadJsonStore(fpath string) map[string]map[uuid.UUID]models.ToDo {
 	file, err := os.Open(fpath)
+	ctx := context.Background()
+	logging.AddTraceID(ctx)
 	if err != nil {
-		ctx := context.Background()
-		logging.AddTraceID(ctx)
 		logging.LogWithTrace(ctx, map[string]interface{}{}, err.Error())
 	}
 	defer file.Close()
@@ -102,14 +102,13 @@ func LoadJsonStore(fpath string) map[string]map[uuid.UUID]models.ToDo {
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&todos)
 	if err != nil {
-		fmt.Println("Error decoding JSON:", err)
-		// 	return
+		logging.LogWithTrace(ctx, map[string]interface{}{}, err.Error())
 	}
 	items := make(map[string]map[uuid.UUID]models.ToDo)
 	for _, item := range todos {
 		items[item.UserId] = map[uuid.UUID]models.ToDo{item.Id: item}
 		if err != nil {
-			fmt.Errorf("error with todo: %+v", item)
+			logging.LogWithTrace(ctx, map[string]interface{}{}, fmt.Sprintf("error with todo: %+v", item))
 		}
 	}
 	return items
@@ -124,7 +123,6 @@ type JsonDatastore struct {
 func (ds *JsonDatastore) AddItem(item models.ToDo) (models.ToDo, error) {
 	ds.mut.Lock()
 	defer ds.mut.Unlock()
-	// items := LoadJsonStore(ds.fpath)
 	if user, exists := ds.items[item.UserId]; exists {
 		user[item.Id] = item
 	} else {
@@ -137,7 +135,6 @@ func (ds *JsonDatastore) AddItem(item models.ToDo) (models.ToDo, error) {
 func (ds *JsonDatastore) GetItem(userId string, itemId uuid.UUID) (models.ToDo, error) {
 	ds.mut.Lock()
 	defer ds.mut.Unlock()
-	// items := LoadJsonStore(ds.fpath)
 	if item, exists := ds.items[userId][itemId]; exists {
 		return item, nil
 	}
@@ -147,7 +144,6 @@ func (ds *JsonDatastore) GetItem(userId string, itemId uuid.UUID) (models.ToDo, 
 func (ds *JsonDatastore) UpdateItem(item models.ToDo) (models.ToDo, error) {
 	ds.mut.Lock()
 	defer ds.mut.Unlock()
-	// ds.items = LoadJsonStore(ds.fpath)
 	if user, exists := ds.items[item.UserId]; exists {
 		if _, iexist := user[item.Id]; iexist {
 			ds.items[item.UserId][item.Id] = item
