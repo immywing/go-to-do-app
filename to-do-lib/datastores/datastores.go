@@ -142,19 +142,19 @@ func (ds *JsonDatastore) Close() {
 			items = append(items, item)
 		}
 	}
-	// bytes, err := json.MarshalIndent(items, "", "  ")
-	// if err != nil {
-	// 	fmt.Println("Error marshalling JSON:", err)
-	// 	return
-	// }
+	bytes, err := json.MarshalIndent(items, "", "  ")
+	if err != nil {
+		fmt.Println("Error marshalling JSON:", err)
+		return
+	}
 
 	// Write the JSON to the file
-	// err = os.WriteFile(ds.fpath, bytes, 0644)
-	// if err != nil {
-	// 	fmt.Println("Error writing to file:", err)
-	// 	return
-	// }
-	// fmt.Println("Data written successfully!")
+	err = os.WriteFile(ds.fpath, bytes, 0644)
+	if err != nil {
+		fmt.Println("Error writing to file:", err)
+		return
+	}
+	fmt.Println("Data written successfully!")
 }
 
 func NewJsonDatastore(path string) DataStore {
