@@ -255,7 +255,7 @@ func PostputToDo(w http.ResponseWriter, r *http.Request, f func(item models.ToDo
 		return
 	}
 	pathparts := strings.Split(r.URL.Path, "/")
-	err = item.Validate(pathparts[1]) //r.Url.Path describes: path (relative paths may omit leading slash), should consider if this needs handling to avoid index out of bounds
+	err = item.Validate(pathparts[1])
 	if err != nil {
 		writeErrorResponse(w, r, http.StatusBadRequest, fmt.Sprintf("Invalid body: %s", err.Error()))
 		return
