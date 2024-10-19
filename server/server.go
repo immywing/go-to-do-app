@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -22,6 +23,9 @@ var (
 )
 
 func WireEndpoints() {
+	http.HandleFunc("/styles.css", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./templates/styles.css")
+	})
 	http.HandleFunc("/v1/swagger.yaml", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./api-specs/to-do-app-api-v1.yaml")
 	})
@@ -41,51 +45,147 @@ func WireEndpoints() {
 	http.HandleFunc("/v1/todo", ToDoHandler)
 	http.HandleFunc("/v2/todo", ToDoHandler)
 
-	http.HandleFunc("/v2/search", serveV2Search)
-	http.HandleFunc("/v2/item", handleV2WebGet)
+	http.HandleFunc("/search", handleFormGet)
+	http.HandleFunc("/update", handleFormPut)
+	http.HandleFunc("/add", handleFormPost)
+	http.HandleFunc("/item", handleItem)
 }
 
-func serveV2Search(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("./templates/v2-search.html")
+func handleFormGet(w http.ResponseWriter, r *http.Request) {
+	serveForm(w, "GET")
+}
+
+func handleFormPut(w http.ResponseWriter, r *http.Request) {
+	serveForm(w, "PUT")
+}
+
+func handleFormPost(w http.ResponseWriter, r *http.Request) {
+	serveForm(w, "POST")
+}
+
+func serveForm(w http.ResponseWriter, method string) {
+	tmpl, err := template.ParseFiles("./templates/todoform.html")
 	if err != nil {
 		http.Error(w, "Error parsing template", http.StatusInternalServerError)
 		return
 	}
-	err = tmpl.Execute(w, nil) // Render the form template without data
+	err = tmpl.Execute(w, method) // Render the form template without data
 	if err != nil {
 		http.Error(w, "Error rendering template", http.StatusInternalServerError)
 	}
 }
 
-func handleV2WebGet(w http.ResponseWriter, r *http.Request) {
+func handleItem(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		handleWebGet(w, r)
+	case http.MethodPost, http.MethodPut:
+		handleWebPostPut(w, r, r.Method)
+	}
+}
+
+func handleWebPostPut(w http.ResponseWriter, r *http.Request, m string) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Error parsing form data", http.StatusBadRequest)
+		return
+	}
+	// fmt.Println(r.FormValue("api_version"))
+	apiVer := r.FormValue("api_version")
+	userID := r.FormValue("user_id")
+	itemID := r.FormValue("id")
+	title := r.FormValue("title")
+	priority := r.FormValue("priority")
+	complete := r.FormValue("complete") == "true"
+	fmt.Println(apiVer, userID, itemID, title, r.FormValue("complete"))
+	itemIn, err := models.NewToDo(&userID, &itemID, &title, &priority, &complete)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	json, err := json.Marshal(itemIn)
+	if err != nil {
+		http.Error(w, "failed to construct item json body", http.StatusInternalServerError)
+		return
+	}
+	apiURL := fmt.Sprintf("http://localhost:8081/%s/todo?", apiVer)
+	var resp *http.Response
+	if m == http.MethodPost {
+		resp, err = http.Post(apiURL, "application/json", bytes.NewBuffer(json))
+	} else {
+		var req *http.Request
+		req, err = http.NewRequest(m, apiURL, bytes.NewBuffer(json))
+		c := http.Client{}
+		resp, err = c.Do(req)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		http.Error(w, "Error reading response", http.StatusInternalServerError)
+		return
+	}
+	item, err := unpackToDoItem(body)
+	if err != nil {
+		http.Error(w, "failed unmarshamlling response", http.StatusInternalServerError)
+		return
+	}
+	serveItem(w, item)
+}
+
+func unpackToDoItem(body []byte) (models.ToDo, error) {
+	var item models.ToDo
+	err := json.Unmarshal(body, &item)
+	if err != nil {
+		return models.ToDo{}, nil
+	}
+	return item, nil
+}
+
+func serveItem(w http.ResponseWriter, item models.ToDo) {
+	tmpl, err := template.ParseFiles("./templates/todoitem.html")
+	if err != nil {
+		http.Error(w, "Error parsing template", http.StatusInternalServerError)
+		return
+	}
+	fmt.Println(item)
+	err = tmpl.Execute(w, item)
+	if err != nil {
+		http.Error(w, "Error rendering template", http.StatusInternalServerError)
+	}
+}
+
+func handleWebGet(w http.ResponseWriter, r *http.Request) {
+	apiVer := r.URL.Query().Get("api_version")
 	userID := r.URL.Query().Get("user_id")
-	itemID := r.URL.Query().Get("item_id")
-	apiURL := fmt.Sprintf("http://localhost:8081/v2/todo?user_id=%s&id=%s", userID, itemID)
+	itemID := r.URL.Query().Get("id")
+	apiURL := fmt.Sprintf("http://localhost:8081/%s/todo?user_id=%s&id=%s", apiVer, userID, itemID)
 	resp, err := http.Get(apiURL)
 	if err != nil {
 		http.Error(w, "Error calling internal API", http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
-
-	// Read the response from the internal API
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		http.Error(w, "Error reading response", http.StatusInternalServerError)
 		return
 	}
-	var item models.ToDo
-	err = json.Unmarshal(body, &item)
-	// Render the template with the API response as the result
-	tmpl, err := template.ParseFiles("./templates/todoitem.html")
+	item, err := unpackToDoItem(body)
 	if err != nil {
-		http.Error(w, "Error parsing template", http.StatusInternalServerError)
+		http.Error(w, "failed unmarshamlling response", http.StatusInternalServerError)
 		return
 	}
-	err = tmpl.Execute(w, item)
-	if err != nil {
-		http.Error(w, "Error rendering template", http.StatusInternalServerError)
-	}
+	serveItem(w, item)
+	// // Render the template with the API response as the result
+	// tmpl, err := template.ParseFiles("./templates/todoitem.html")
+	// if err != nil {
+	// 	http.Error(w, "Error parsing template", http.StatusInternalServerError)
+	// 	return
+	// }
+	// fmt.Println(item)
+	// err = tmpl.Execute(w, item)
+	// if err != nil {
+	// 	http.Error(w, "Error rendering template", http.StatusInternalServerError)
+	// }
 }
 
 func Start(store *datastores.DataStore, shutdownChan chan bool) {
@@ -212,7 +312,7 @@ func getToDo(w http.ResponseWriter, r *http.Request) {
 	if id == "" {
 		writeErrorResponse(w, r, http.StatusBadRequest, "missing 'id' query paramater")
 	}
-	if userId == "" && ver == "v1" {
+	if userId == "" && ver == "v2" {
 		writeErrorResponse(w, r, http.StatusBadRequest, "missing 'user_id' query paramater")
 	}
 	uuid, err := uuid.Parse(id)

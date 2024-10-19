@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{if eq . "GET"}}
+        <title>Search Items</title>
+    {{end}}
+    {{if eq . "PUT"}}
+        <title>Update Item</title>
+    {{end}}
+    {{if eq . "POST"}}
+        <title>Add Item</title>
+    {{end}}
+    <link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+    <div class="container">
+        <h1>Lookup Item</h1>
+        <!-- Radio buttons to select the API version -->
+        <input type="radio" id="v1" name="version" checked>
+        <label for="v1">v1</label>
+        <input type="radio" id="v2" name="version">
+        <label for="v2">v2</label>
+
+        <!-- Form for v1 -->
+        <div class="form-container form-v1">
+            <form action="/item" method={{.}}>
+                <input type="hidden" id="api_version" name="api_version" value="v1">
+                <label for="item_id_v1">Item ID</label>
+                <input type="text" id="item_id_v1" name="id" required>
+                {{if ne . "GET"}}
+                    <label for="item_title_v1">Title</label>
+                    <input type="text" id="item_title_v1" name="title" required>
+                    <label for="item_priority_v1">Priority</label>
+                    <input type="text" id="item_priority_v1" name="priority" required>
+                    <label>Complete</label>
+                    <div class="radio-group">
+                        <input type="radio" id="item_complete_true_v1" value="true"name="complete">
+                        <label for="item_complete_true_v1">True</label>
+                        <input type="radio" id="item_complete_false_v1" value="false" name="complete" checked>
+                        <label for="item_complete_false_v1">False</label>
+                    </div>
+                {{end}}
+                {{if eq . "GET"}}
+                    <button type="submit">Search v1</button>
+                {{end}}
+                {{if eq . "PUT"}}
+                    <button type="submit">Update v1</button>
+                {{end}}
+                {{if eq . "POST"}}
+                    <button type="submit">Add v1</button>
+                {{end}}
+            </form>
+        </div>
+
+        <!-- Form for v2 -->
+        <div class="form-container form-v2">
+            <form action="/item" method={{.}}>
+                <input type="hidden" id="api_version" name="api_version" value="v2">
+                <label for="user_id_v2">User ID</label>
+                <input type="text" id="user_id_v2" name="user_id" required>
+                <label for="item_id_v2">Item ID</label>
+                <input type="text" id="item_id_v2" name="id" required>
+                {{if ne . "GET"}}
+                    <label for="item_title_v2">Title</label>
+                    <input type="text" id="item_title_v2" name="title" required>
+                    <label for="item_priority_v1">Priority</label>
+                    <input type="text" id="item_priority_v1" name="priority" required>
+                    <label>Complete</label>
+                    <div class="radio-group">
+                        <input type="radio" id="item_complete_true_v2" value="true" name="complete">
+                        <label for="item_complete_true_v2">True</label>
+                        <input type="radio" id="item_complete_false_v2" value="false" name="complete" checked>
+                        <label for="item_complete_false_v2">False</label>
+                    </div>
+                {{end}}
+                {{if eq . "GET"}}
+                    <button type="submit">Search v1</button>
+                {{end}}
+                {{if eq . "PUT"}}
+                    <button type="submit">Update v1</button>
+                {{end}}
+                {{if eq . "POST"}}
+                    <button type="submit">Add v1</button>
+                {{end}}
+            </form>
+        </div>
+    </div>
+</body>
+</html>

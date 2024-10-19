@@ -67,7 +67,7 @@ func (t *ToDo) Validate(ver string) error {
 	return nil
 }
 
-func ToDoFromCLI(id *string, title *string, priority *string, complete *bool) (ToDo, error) {
+func NewToDo(userId *string, id *string, title *string, priority *string, complete *bool) (ToDo, error) {
 	uuid, err := uuid.Parse(*id)
 	if err != nil {
 		return ToDo{}, err

@@ -4,14 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Item Lookup</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     {{if .}}
         <h2>Item Details:</h2>
+        {{if ne .UserId ""}}
+            <p><strong>User ID:</strong> {{.UserId}}</p>
+        {{end}}
+        <p><strong>Item ID:</strong> {{.Id}}</p>
         <p><strong>Title:</strong> {{.Title}}</p>
         <p><strong>Complete:</strong> {{.Complete}}</p>
     {{end}}
     <br>
-    <button type="button" onclick="window.location.href='/v2/search'">Search</button>
+    <button type="button" onclick="window.location.href='/search'">Search</button>
 </body> 
 </html>

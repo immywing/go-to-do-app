@@ -1,0 +1,186 @@
+/* styles.css */
+
+/* Global Styles for Dark Mode */
+body {
+    background-color: #2c2c2c;
+    color: #f0f0f0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+
+/* Headings */
+h1, h2 {
+    margin-bottom: 20px;
+    color: #f0f0f0;
+}
+
+/* Paragraphs */
+p {
+    margin: 5px 0;
+}
+
+/* Form Styles */
+form {
+    background-color: #3a3a3a;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+/* Input Fields */
+input[type="text"], input[type="hidden"] {
+    text-align: center;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 4px;
+    background-color: #2c2c2c;
+    color: #f0f0f0;
+    width: 100%;
+}
+
+input[type="text"]:focus {
+    outline: 2px solid #007bff;
+}
+
+/* Buttons */
+button {
+    background-color: #007bff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+    color: #ffffff;
+    padding: 10px 15px;
+    transition: background-color 0.3s;
+    text-align: center;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Styling for Item Details */
+strong {
+    color: #f0f0f0;
+}
+
+/* Toggle Button Styles (Radio Buttons Styled as Toggle) */
+input[type="radio"] {
+    display: none;
+}
+
+label[for="v1"], label[for="v2"] {
+    cursor: pointer;
+    padding: 8px 16px;
+    margin-right: 5px;
+    background-color: #3a3a3a;
+    border: 1px solid #555;
+    border-radius: 4px;
+    text-align: center;
+}
+
+/* Highlight the label of the selected version */
+input[type="radio"]:checked + label {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+label[for="item_complete_true_v1"], label[for="item_complete_false_v1"],
+label[for="item_complete_true_v2"], label[for="item_complete_false_v2"]
+{ 
+    cursor: pointer;
+    padding: 8px 16px;
+    margin-right: 5px;
+    background-color: #3a3a3a;
+    border: 1px solid #555;
+    border-radius: 4px;
+}
+/* Styles for Radio Group */
+.radio-group {
+    display: flex; /* Use flexbox for horizontal alignment */
+    align-items: center; /* Center items vertically */
+}
+
+.radio-group input[type="radio"] {
+    margin-right: 5px; /* Space between radio button and label */
+}
+
+.radio-group label {
+    width: 50%;
+    text-align:center;
+    cursor: pointer; /* Change cursor to pointer for labels */
+    padding: 8px 16px; /* Add padding to labels for better touch area */
+    background-color: #3a3a3a; /* Background color for labels */
+    border: 1px solid #555; /* Border for labels */
+    border-radius: 4px; /* Rounded corners for labels */
+    margin-right: 10px; /* Space between labels */
+}
+
+/* Responsive styling */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    form {
+        width: 100%;
+    }
+
+    button {
+        width: 100%;
+    }
+}
+
+.container {
+    margin: auto;
+    max-width: 400px;
+    padding: 20px;
+    background-color: #3c3c3c;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Hide all forms by default */
+.form-container {
+    display: none;
+}
+
+/* Show the form when the corresponding radio button is checked */
+#v1:checked ~ .form-v1 {
+    display: block;
+}
+
+#v2:checked ~ .form-v2 {
+    display: block;
+}
+
+/* Style for form elements */
+input[type="text"] {
+    width: 90%;
+    padding: 10px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 4px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+label {
+    display: block;
+    margin: 10px 0 5px;
+}

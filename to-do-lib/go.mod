@@ -1,4 +1,5 @@
-module to-do-app
+module github.com/immy/to-do-lib
+
 
 go 1.23.0
 
