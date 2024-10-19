@@ -9,9 +9,10 @@ import (
 	"net/http"
 	"sync"
 	"testing"
-	"to-do-app/datastores"
-	"to-do-app/models"
-	"to-do-app/server"
+
+	"github.com/immywing/go-to-do-app/to-do-lib/datastores"
+	"github.com/immywing/go-to-do-app/to-do-lib/models"
+	"github.com/immywing/go-to-do-app/to-do-lib/server"
 
 	"github.com/google/uuid"
 )
