@@ -22,6 +22,7 @@ var (
 
 func listenForClose() {
 	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("Todo server running\n!Q to close the server")
 	for {
 		text, err := reader.ReadString('\n')
 		if err != nil {

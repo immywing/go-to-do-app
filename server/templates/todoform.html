@@ -77,16 +77,22 @@
                     </div>
                 {{end}}
                 {{if eq . "GET"}}
-                    <button type="submit">Search v1</button>
+                    <button type="submit">Search v2</button>
                 {{end}}
                 {{if eq . "PUT"}}
-                    <button type="submit">Update v1</button>
+                    <button type="submit">Update v2</button>
                 {{end}}
                 {{if eq . "POST"}}
-                    <button type="submit">Add v1</button>
+                    <button type="submit">Add v2</button>
                 {{end}}
             </form>
         </div>
     </div>
+    <ul class="navbar">
+        <li><a href="/">Home</a></li>
+        <li><a href="/search">Search</a></li>
+        <li><a href="/update">Update Item</a></li>
+        <li><a href="/add">Add New Item</a></li>
+    </ul>
 </body>
 </html>

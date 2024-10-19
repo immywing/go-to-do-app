@@ -25,6 +25,55 @@ p {
     margin: 5px 0;
 }
 
+/* Navbar Styling */
+.navbar {
+    list-style-type: none; 
+    padding: 0;
+    margin: 0;
+    width: 15vw;
+    height: 100vh;
+    background-color: #3a3a3a;
+    position: fixed;
+    top: 0;
+    left: 0;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* Navbar List Items */
+.navbar li {
+    display: flex;
+    margin-right: auto;
+    width: 100%;
+    text-align: center;
+}
+
+/* Navbar Links */
+.navbar li a {
+    display: block;
+    color: #f0f0f0; /* Light text color */
+    text-decoration: none;
+    padding: 15px;
+    width: 100%;
+    background-color: #4a4a4a; /* Slightly lighter background than navbar */
+    border-radius: 8px; /* Rounded corners */
+    margin: 10px ; /* Space between items */
+    transition: background-color 0.3s; /* Smooth hover transition */
+}
+/* Hover Effect for Links */
+.navbar li a:hover {
+    background-color: #5a5a5a; /* Darker background on hover */
+}
+
+/* Main Content Styling to Accommodate Navbar */
+.main-content {
+    margin-bottom: auto;
+    margin-left: .navbar.width;
+}
+
 /* Form Styles */
 form {
     background-color: #3a3a3a;

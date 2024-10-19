@@ -3,25 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Item Lookup</title>
+    <title>To-Do App</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    {{if .}}
-        <h2>Item Details:</h2>
-        {{if ne .UserId ""}}
-            <p><strong>User ID:</strong> {{.UserId}}</p>
-        {{end}}
-        <p><strong>Item ID:</strong> {{.Id}}</p>
-        <p><strong>Title:</strong> {{.Title}}</p>
-        <p><strong>Complete:</strong> {{.Complete}}</p>
-    {{end}}
-    <br>
     <ul class="navbar">
         <li><a href="/">Home</a></li>
         <li><a href="/search">Search</a></li>
         <li><a href="/update">Update Item</a></li>
         <li><a href="/add">Add New Item</a></li>
-    </ul> 
-</body> 
+    </ul>
+    <div class="main-content">
+        <h1>Welcome to To-Do</h1>
+    </div>
+</body>
 </html>

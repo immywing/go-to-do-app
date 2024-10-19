@@ -45,11 +45,37 @@ func WireEndpoints() {
 	})
 	http.HandleFunc("/v1/todo", ToDoHandler)
 	http.HandleFunc("/v2/todo", ToDoHandler)
-
+	//web ui handlers
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		tmpl, _ := template.ParseFiles("./templates/home.html")
+		tmpl.Execute(w, nil)
+	})
 	http.HandleFunc("/search", handleFormGet)
 	http.HandleFunc("/update", handleFormPut)
 	http.HandleFunc("/add", handleFormPost)
 	http.HandleFunc("/item", handleItem)
+}
+
+func Start(store *datastores.DataStore, shutdownChan chan bool) {
+	datastore = *store
+	srv := &http.Server{
+		Addr: ":8081",
+	}
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("ListenAndServe error: %v\n", err)
+		}
+	}()
+	<-shutdownChan
+	datastore.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		fmt.Printf("Server Shutdown error: %v\n", err)
+	} else {
+		fmt.Println("Server shut down gracefully")
+	}
+	shutdownChan <- true
 }
 
 func handleFormGet(w http.ResponseWriter, r *http.Request) {
@@ -176,28 +202,6 @@ func handleWebGet(w http.ResponseWriter, r *http.Request) {
 	serveItem(w, item)
 }
 
-func Start(store *datastores.DataStore, shutdownChan chan bool) {
-	datastore = *store
-	srv := &http.Server{
-		Addr: ":8081",
-	}
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			fmt.Printf("ListenAndServe error: %v\n", err)
-		}
-	}()
-	<-shutdownChan
-	datastore.Close()
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		fmt.Printf("Server Shutdown error: %v\n", err)
-	} else {
-		fmt.Println("Server shut down gracefully")
-	}
-	shutdownChan <- true
-}
-
 func writeJSONResponse(w http.ResponseWriter, r *http.Request, statusCode int, data []byte) {
 	ctx := logging.AddTraceID(r.Context())
 	w.Header().Set("Content-Type", "application/json")
@@ -227,7 +231,7 @@ func handleDataStoreError(w http.ResponseWriter, r *http.Request, err error) {
 
 func PostputToDo(w http.ResponseWriter, r *http.Request, f func(item models.ToDo) (models.ToDo, error)) {
 	w.Header().Set("Content-Type", "application/json")
-	// defer r.Body.Close()
+	defer r.Body.Close()
 	var item models.ToDo
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -255,44 +259,6 @@ func PostputToDo(w http.ResponseWriter, r *http.Request, f func(item models.ToDo
 		writeErrorResponse(w, r, http.StatusInternalServerError, "Internal Server Error")
 	}
 	writeJSONResponse(w, r, http.StatusCreated, resp)
-	// versionItem(w, r, item)
-	// pathparts := strings.Split(r.URL.Path, "/")
-	// fmt.Println()
-	// versionPath := strings.Split(r.URL.Path, "/")[0]
-	// ver := int(versionPath[1] - '0')
-	// if err = item.Validate(ver); err != nil {
-	// 	//
-	// }
-	// if ver, exists := versions[strings.Split(r.URL.Path, "/")[0]]; !exists {
-	// 	writeErrorResponse(w, r, http.StatusInternalServerError, "Failed to parse API version")
-	// } else {
-	// 	item.Validate(ver)
-	// }
-
-	// fmt.Println(r.URL.Path, pathParts)
-	// postputResultChan := make(chan models.ToDo)
-	// postputErrorChan := make(chan error)
-	// go func() {
-	// 	item, err := f(item)
-	// 	if err != nil {
-	// 		postputErrorChan <- err
-	// 		return
-	// 	}
-	// 	postputResultChan <- item
-	// }()
-	// select {
-	// case item := <-postputResultChan:
-	// 	resp, err := json.Marshal(item)
-	// 	if err != nil {
-	// 		writeErrorResponse(w, r, http.StatusInternalServerError, "Internal Server Error")
-	// 	}
-	// 	writeJSONResponse(w, r, http.StatusCreated, resp)
-	// case err := <-postputErrorChan:
-	// 	handleDataStoreError(w, r, err)
-	// case <-time.After(time.Second * 10):
-	// 	writeErrorResponse(w, r, http.StatusGatewayTimeout, "Request timed out")
-	// }
-
 }
 
 func getToDo(w http.ResponseWriter, r *http.Request) {
