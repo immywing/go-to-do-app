@@ -1,4 +1,4 @@
-package server
+package wiring
 
 import (
 	"bytes"
@@ -8,12 +8,15 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
-	"github.com/immywing/go-to-do-app/to-do-lib"
-
 	"github.com/google/uuid"
+	"github.com/immywing/go-to-do-app/to-do-lib/datastores"
+	todoerrors "github.com/immywing/go-to-do-app/to-do-lib/errors"
+	"github.com/immywing/go-to-do-app/to-do-lib/logging"
+	"github.com/immywing/go-to-do-app/to-do-lib/models"
 )
 
 var (
@@ -67,7 +70,7 @@ func serveForm(w http.ResponseWriter, method string) {
 		http.Error(w, "Error parsing template", http.StatusInternalServerError)
 		return
 	}
-	err = tmpl.Execute(w, method) // Render the form template without data
+	err = tmpl.Execute(w, method)
 	if err != nil {
 		http.Error(w, "Error rendering template", http.StatusInternalServerError)
 	}
@@ -87,14 +90,12 @@ func handleWebPostPut(w http.ResponseWriter, r *http.Request, m string) {
 		http.Error(w, "Error parsing form data", http.StatusBadRequest)
 		return
 	}
-	// fmt.Println(r.FormValue("api_version"))
 	apiVer := r.FormValue("api_version")
 	userID := r.FormValue("user_id")
 	itemID := r.FormValue("id")
 	title := r.FormValue("title")
 	priority := r.FormValue("priority")
 	complete := r.FormValue("complete") == "true"
-	fmt.Println(apiVer, userID, itemID, title, r.FormValue("complete"))
 	itemIn, err := models.NewToDo(&userID, &itemID, &title, &priority, &complete)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -173,20 +174,9 @@ func handleWebGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	serveItem(w, item)
-	// // Render the template with the API response as the result
-	// tmpl, err := template.ParseFiles("./templates/todoitem.html")
-	// if err != nil {
-	// 	http.Error(w, "Error parsing template", http.StatusInternalServerError)
-	// 	return
-	// }
-	// fmt.Println(item)
-	// err = tmpl.Execute(w, item)
-	// if err != nil {
-	// 	http.Error(w, "Error rendering template", http.StatusInternalServerError)
-	// }
 }
 
-func Start(store *datastores.DataStore, shutdownChan chan bool) {
+func Start(store *datastores.DataStore, shutdownChan chan os.Signal) {
 	datastore = *store
 	srv := &http.Server{
 		Addr: ":8081",

@@ -1,4 +1,4 @@
-package server_test
+package wiring_test
 
 import (
 	"bytes"
@@ -7,12 +7,14 @@ import (
 	"io"
 	"math/rand/v2"
 	"net/http"
+	"os"
 	"sync"
 	"testing"
 
-	"github.com/immywing/go-to-do-app/to-do-lib"
-
 	"github.com/google/uuid"
+	"github.com/immywing/go-to-do-app/server/wiring"
+	"github.com/immywing/go-to-do-app/to-do-lib/datastores"
+	"github.com/immywing/go-to-do-app/to-do-lib/models"
 )
 
 func TestConcurrentPutRequests(t *testing.T) {
@@ -26,13 +28,13 @@ func TestConcurrentPutRequests(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		items = append(items, models.ToDo{Id: uuid.New(), Title: "test", Priority: "High", Complete: false, UserId: uuid.New().String()})
 	}
-	server.WireEndpoints()
+	wiring.WireEndpoints()
 	for _, datastore := range stores {
 		for _, item := range items {
 			datastore.AddItem(item)
 		}
-		shutdownChan := make(chan bool)
-		go server.Start(&datastore, shutdownChan)
+		shutdownChan := make(chan os.Signal, 1)
+		go wiring.Start(&datastore, shutdownChan)
 
 		var wg sync.WaitGroup
 		numRequests := 100000

@@ -18,6 +18,7 @@ type DataStore interface {
 	AddItem(item models.ToDo) (models.ToDo, error)
 	GetItem(userId string, itemId uuid.UUID) (models.ToDo, error)
 	UpdateItem(item models.ToDo) (models.ToDo, error)
+	Close()
 }
 
 type inMemDatastore struct {
@@ -28,14 +29,7 @@ type inMemDatastore struct {
 func (ds *inMemDatastore) AddItem(item models.ToDo) (models.ToDo, error) {
 	ds.mut.Lock()
 	defer ds.mut.Unlock()
-	// if item.Title == "" {
-	// 	return models.ToDo{}, &todoerrors.ValidationError{Field: fmt.Sprintf("title: %s", item.Title), Err: errors.New("invalid title")}
-	// }
-	// p, err := models.ParsePriority(item.Priority)
-	// if err != nil {
-	// 	return models.ToDo{}, &todoerrors.ValidationError{Field: fmt.Sprintf("priority: %s", item.Priority), Err: err}
-	// }
-	// item.Priority = p
+
 	if user, exists := ds.Items[item.UserId]; exists {
 		user[item.Id] = item
 	} else {
@@ -56,14 +50,7 @@ func (ds *inMemDatastore) GetItem(userId string, itemId uuid.UUID) (models.ToDo,
 func (ds *inMemDatastore) UpdateItem(item models.ToDo) (models.ToDo, error) {
 	ds.mut.Lock()
 	defer ds.mut.Unlock()
-	// if item.Title == "" {
-	// 	return models.ToDo{}, &todoerrors.ValidationError{Field: item.Title, Err: errors.New("invalid title")}
-	// }
-	// p, err := models.ParsePriority(item.Priority)
-	// if err != nil {
-	// 	return models.ToDo{}, &todoerrors.ValidationError{Field: item.Priority, Err: err}
-	// }
-	// item.Priority = p
+
 	if user, exists := ds.Items[item.UserId]; exists {
 		if _, iexist := user[item.Id]; iexist {
 			ds.Items[item.UserId][item.Id] = item
@@ -74,26 +61,8 @@ func (ds *inMemDatastore) UpdateItem(item models.ToDo) (models.ToDo, error) {
 	return models.ToDo{}, &todoerrors.NotFoundError{Message: "ToDo Not Found"}
 }
 
-func SaveToJson(todos map[string]map[uuid.UUID]models.ToDo, fpath string) {
-	items := make([]models.ToDo, 0)
-	for _, user := range todos {
-		for _, item := range user {
-			items = append(items, item)
-		}
-	}
-	bytes, err := json.MarshalIndent(items, "", "  ")
-	if err != nil {
-		fmt.Println("Error marshalling JSON:", err)
-		return
-	}
+func (ds *inMemDatastore) Close() {
 
-	// Write the JSON to the file
-	err = os.WriteFile(fpath, bytes, 0644)
-	if err != nil {
-		fmt.Println("Error writing to file:", err)
-		return
-	}
-	fmt.Println("Data written successfully!")
 }
 
 func NewInMemDataStore() DataStore {
@@ -127,35 +96,27 @@ func LoadJsonStore(fpath string) map[string]map[uuid.UUID]models.ToDo {
 
 type JsonDatastore struct {
 	fpath string
+	items map[string]map[uuid.UUID]models.ToDo
 	mut   sync.Mutex
 }
 
 func (ds *JsonDatastore) AddItem(item models.ToDo) (models.ToDo, error) {
 	ds.mut.Lock()
 	defer ds.mut.Unlock()
-	items := LoadJsonStore(ds.fpath)
-	// if item.Title == "" {
-	// 	return models.ToDo{}, &todoerrors.ValidationError{Field: item.Title, Err: errors.New("invalid title")}
-	// }
-	// p, err := models.ParsePriority(item.Priority)
-	// if err != nil {
-	// 	return models.ToDo{}, &todoerrors.ValidationError{Field: item.Priority, Err: err}
-	// }
-	// item.Priority = p
-	if user, exists := items[item.UserId]; exists {
+
+	if user, exists := ds.items[item.UserId]; exists {
 		user[item.Id] = item
 	} else {
-		items[item.UserId] = map[uuid.UUID]models.ToDo{item.Id: item}
+		ds.items[item.UserId] = map[uuid.UUID]models.ToDo{item.Id: item}
 	}
-	SaveToJson(items, ds.fpath)
-	return items[item.UserId][item.Id], nil
+	return ds.items[item.UserId][item.Id], nil
 }
 
 func (ds *JsonDatastore) GetItem(userId string, itemId uuid.UUID) (models.ToDo, error) {
 	ds.mut.Lock()
 	defer ds.mut.Unlock()
-	items := LoadJsonStore(ds.fpath)
-	if item, exists := items[userId][itemId]; exists {
+
+	if item, exists := ds.items[userId][itemId]; exists {
 		return item, nil
 	}
 	return models.ToDo{}, &todoerrors.NotFoundError{Message: "ToDo Not Found"}
@@ -164,25 +125,38 @@ func (ds *JsonDatastore) GetItem(userId string, itemId uuid.UUID) (models.ToDo, 
 func (ds *JsonDatastore) UpdateItem(item models.ToDo) (models.ToDo, error) {
 	ds.mut.Lock()
 	defer ds.mut.Unlock()
-	items := LoadJsonStore(ds.fpath)
-	// if item.Title == "" {
-	// 	return models.ToDo{}, &todoerrors.ValidationError{Field: item.Title, Err: errors.New("invalid title")}
-	// }
-	// p, err := models.ParsePriority(item.Priority)
-	// if err != nil {
-	// 	return models.ToDo{}, &todoerrors.ValidationError{Field: item.Priority, Err: err}
-	// }
-	// item.Priority = p
-	if user, exists := items[item.UserId]; exists {
+
+	if user, exists := ds.items[item.UserId]; exists {
 		if _, iexist := user[item.Id]; iexist {
-			items[item.UserId][item.Id] = item
-			SaveToJson(items, ds.fpath)
-			return items[item.UserId][item.Id], nil
+			ds.items[item.UserId][item.Id] = item
+			return ds.items[item.UserId][item.Id], nil
 		}
 	}
 	return models.ToDo{}, &todoerrors.NotFoundError{Message: "ToDo Not Found"}
 }
 
+func (ds *JsonDatastore) Close() {
+	items := make([]models.ToDo, 0)
+	for _, user := range ds.items {
+		for _, item := range user {
+			items = append(items, item)
+		}
+	}
+	// bytes, err := json.MarshalIndent(items, "", "  ")
+	// if err != nil {
+	// 	fmt.Println("Error marshalling JSON:", err)
+	// 	return
+	// }
+
+	// Write the JSON to the file
+	// err = os.WriteFile(ds.fpath, bytes, 0644)
+	// if err != nil {
+	// 	fmt.Println("Error writing to file:", err)
+	// 	return
+	// }
+	// fmt.Println("Data written successfully!")
+}
+
 func NewJsonDatastore(path string) DataStore {
-	return &JsonDatastore{fpath: path, mut: sync.Mutex{}}
+	return &JsonDatastore{fpath: path, items: LoadJsonStore(path), mut: sync.Mutex{}}
 }
