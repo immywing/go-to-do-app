@@ -76,6 +76,6 @@ func TestConcurrentPutRequests(t *testing.T) {
 			}(i)
 		}
 		wg.Wait()
-		close(shutdownChan)
+		shutdownChan <- true
 	}
 }
