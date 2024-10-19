@@ -8,7 +8,6 @@ import (
 	"html/template"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -176,7 +175,7 @@ func handleWebGet(w http.ResponseWriter, r *http.Request) {
 	serveItem(w, item)
 }
 
-func Start(store *datastores.DataStore, shutdownChan chan os.Signal) {
+func Start(store *datastores.DataStore, shutdownChan chan bool) {
 	datastore = *store
 	srv := &http.Server{
 		Addr: ":8081",
@@ -187,6 +186,7 @@ func Start(store *datastores.DataStore, shutdownChan chan os.Signal) {
 		}
 	}()
 	<-shutdownChan
+	datastore.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {

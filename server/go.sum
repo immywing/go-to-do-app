@@ -2,3 +2,5 @@ github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/immywing/go-to-do-app/to-do-lib v0.0.0-20241019110940-d42ada038e71 h1:bJ56DPzVGC+ac5o57SkSxr7cB+1CfguFSucxojDLqHM=
 github.com/immywing/go-to-do-app/to-do-lib v0.0.0-20241019110940-d42ada038e71/go.mod h1:8JXJpfizhWboKKmfNvmkCYnUqM+H3m19ah8YBDtqxnA=
+github.com/immywing/go-to-do-app/to-do-lib v0.0.0-20241019133951-2904cc4cd925 h1:l/wu4yb2+pcNzEekhoxVn09VJCvVn7bTNGPKfl4K6uE=
+github.com/immywing/go-to-do-app/to-do-lib v0.0.0-20241019133951-2904cc4cd925/go.mod h1:8JXJpfizhWboKKmfNvmkCYnUqM+H3m19ah8YBDtqxnA=

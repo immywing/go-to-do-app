@@ -7,7 +7,6 @@ import (
 	"io"
 	"math/rand/v2"
 	"net/http"
-	"os"
 	"sync"
 	"testing"
 
@@ -33,7 +32,7 @@ func TestConcurrentPutRequests(t *testing.T) {
 		for _, item := range items {
 			datastore.AddItem(item)
 		}
-		shutdownChan := make(chan os.Signal, 1)
+		shutdownChan := make(chan bool)
 		go wiring.Start(&datastore, shutdownChan)
 
 		var wg sync.WaitGroup

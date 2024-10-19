@@ -1,13 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"flag"
 	"fmt"
 	"os"
-	"os/signal"
 	"path/filepath"
-	"syscall"
+	"strings"
 
 	"github.com/immywing/go-to-do-app/server/wiring"
 	"github.com/immywing/go-to-do-app/to-do-lib/datastores"
@@ -15,9 +15,24 @@ import (
 )
 
 var (
-	mode     = flag.String("mode", "", "set the mode the application should run in (in-mem, json-store, pgdb)")
-	jsonPath = flag.String("json", "", "filepath of json file to use as datastore")
+	mode         = flag.String("mode", "", "set the mode the application should run in (in-mem, json-store, pgdb)")
+	jsonPath     = flag.String("json", "", "filepath of json file to use as datastore")
+	shutdownChan = make(chan bool)
 )
+
+func listenForClose() {
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		text, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Println(err)
+		}
+		if strings.Trim(strings.Fields(text)[0], " \n") == "!Q" {
+			shutdownChan <- true
+			break
+		}
+	}
+}
 
 func run() {
 	flag.Parse()
@@ -47,15 +62,9 @@ func run() {
 		os.Exit(1)
 	}
 
-	// Create a channel to listen for shutdown signals
-	shutdownChan := make(chan os.Signal, 1)
-	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
-
 	wiring.WireEndpoints()
 	go wiring.Start(&store, shutdownChan) // Start server in a goroutine
-
-	// Wait for a shutdown signal to ensure a graceful exit
-	<-shutdownChan
+	listenForClose()
 }
 
 func main() {
