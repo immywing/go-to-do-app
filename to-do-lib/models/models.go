@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	todoerrors "github.com/immy/go-to-do-app/to-do-lib/errors"
+	todoerrors "github.com/immywing/go-to-do-app/to-do-lib/errors"
 
 	"github.com/google/uuid"
 )

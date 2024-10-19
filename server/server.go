@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/immy/go-to-do-app/to-do-lib/datastores"
-	"github.com/immy/go-to-do-app/to-do-lib/logging"
-	"github.com/immy/go-to-do-app/to-do-lib/models"
-	"github.com/immy/go-to-do-app/to-do-liberrors"
+	"github.com/immywingwing/go-to-do-app/to-do-lib/datastores"
+	"github.com/immywingwing/go-to-do-app/to-do-lib/logging"
+	"github.com/immywingwing/go-to-do-app/to-do-lib/models"
+	"github.com/immywingwing/go-to-do-app/to-do-liberrors"
 
 	"github.com/google/uuid"
 )

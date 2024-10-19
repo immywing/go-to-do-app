@@ -4,9 +4,9 @@ import (
 	"context"
 	"flag"
 
-	"github.com/immy/go-to-do-app/to-do-lib/apiclient"
-	"github.com/immy/go-to-do-app/to-do-lib/logging"
-	"github.com/immy/go-to-do-app/to-do-lib/models"
+	"github.com/immywing/go-to-do-app/to-do-lib/apiclient"
+	"github.com/immywing/go-to-do-app/to-do-lib/logging"
+	"github.com/immywing/go-to-do-app/to-do-lib/models"
 )
 
 var (

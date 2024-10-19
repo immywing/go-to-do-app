@@ -7,9 +7,9 @@ import (
 	"os"
 	"sync"
 
-	todoerrors "github.com/immy/go-to-do-app/to-do-lib/errors"
-	"github.com/immy/go-to-do-app/to-do-lib/logging"
-	"github.com/immy/go-to-do-app/to-do-lib/models"
+	todoerrors "github.com/immywing/go-to-do-app/to-do-lib/errors"
+	"github.com/immywing/go-to-do-app/to-do-lib/logging"
+	"github.com/immywing/go-to-do-app/to-do-lib/models"
 
 	"github.com/google/uuid"
 )
