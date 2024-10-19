@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/immywing/go-to-do-app/server/wiring"
-	"github.com/immywing/go-to-do-app/to-do-lib/datastores"
-	"github.com/immywing/go-to-do-app/to-do-lib/logging"
+	"go-to-do-app/server/wiring"
+	"go-to-do-app/to-do-lib/datastores"
+	"go-to-do-app/to-do-lib/logging"
 )
 
 var (

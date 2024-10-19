@@ -3,7 +3,7 @@ package models_test
 import (
 	"testing"
 
-	"github.com/immywing/go-to-do-app/to-do-lib/models"
+	"go-to-do-app/to-do-lib/models"
 )
 
 func TestParsePriorityWithValidStrings(t *testing.T) {

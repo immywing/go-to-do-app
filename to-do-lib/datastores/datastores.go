@@ -7,9 +7,9 @@ import (
 	"os"
 	"sync"
 
-	todoerrors "github.com/immywing/go-to-do-app/to-do-lib/errors"
-	"github.com/immywing/go-to-do-app/to-do-lib/logging"
-	"github.com/immywing/go-to-do-app/to-do-lib/models"
+	todoerrors "go-to-do-app/to-do-lib/errors"
+	"go-to-do-app/to-do-lib/logging"
+	"go-to-do-app/to-do-lib/models"
 
 	"github.com/google/uuid"
 )
@@ -88,7 +88,7 @@ func LoadJsonStore(fpath string) map[string]map[uuid.UUID]models.ToDo {
 	for _, item := range todos {
 		items[item.UserId] = map[uuid.UUID]models.ToDo{item.Id: item}
 		if err != nil {
-			// fmt.Errorf("error with todo: %+v", item)
+			fmt.Errorf("error with todo: %+v", item)
 		}
 	}
 	return items
@@ -154,7 +154,7 @@ func (ds *JsonDatastore) Close() {
 		fmt.Println("Error writing to file:", err)
 		return
 	}
-	fmt.Println("Data written successfully!")
+	fmt.Println("Data written successfully!!!!!")
 }
 
 func NewJsonDatastore(path string) DataStore {

@@ -3,8 +3,8 @@ package datastores_test
 import (
 	"testing"
 
-	"github.com/immywing/go-to-do-app/to-do-lib/datastores"
-	"github.com/immywing/go-to-do-app/to-do-lib/models"
+	"go-to-do-app/to-do-lib/datastores"
+	"go-to-do-app/to-do-lib/models"
 
 	"github.com/google/uuid"
 )

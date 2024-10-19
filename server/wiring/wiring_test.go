@@ -10,14 +10,14 @@ import (
 	"sync"
 	"testing"
 
+	"go-to-do-app/server/wiring"
+	"go-to-do-app/to-do-lib/datastores"
+	"go-to-do-app/to-do-lib/models"
+
 	"github.com/google/uuid"
-	"github.com/immywing/go-to-do-app/server/wiring"
-	"github.com/immywing/go-to-do-app/to-do-lib/datastores"
-	"github.com/immywing/go-to-do-app/to-do-lib/models"
 )
 
 func TestConcurrentPutRequests(t *testing.T) {
-	// datastore := datastores.NewInMemDataStore()
 	stores := []datastores.DataStore{
 		datastores.NewInMemDataStore(),
 		datastores.NewJsonDatastore("store.json")}

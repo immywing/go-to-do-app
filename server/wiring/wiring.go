@@ -11,11 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"go-to-do-app/to-do-lib/datastores"
+	todoerrors "go-to-do-app/to-do-lib/errors"
+	"go-to-do-app/to-do-lib/logging"
+	"go-to-do-app/to-do-lib/models"
+
 	"github.com/google/uuid"
-	"github.com/immywing/go-to-do-app/to-do-lib/datastores"
-	todoerrors "github.com/immywing/go-to-do-app/to-do-lib/errors"
-	"github.com/immywing/go-to-do-app/to-do-lib/logging"
-	"github.com/immywing/go-to-do-app/to-do-lib/models"
 )
 
 var (

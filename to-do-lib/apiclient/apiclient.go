@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/immywing/go-to-do-app/to-do-lib/logging"
-	"github.com/immywing/go-to-do-app/to-do-lib/models"
+	"go-to-do-app/to-do-lib/logging"
+	"go-to-do-app/to-do-lib/models"
 
 	"github.com/google/uuid"
 )
