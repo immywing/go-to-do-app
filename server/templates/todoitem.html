@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    {{if .}}
+    {{if ne .Title ""}}
         <h2>Item Details:</h2>
         {{if ne .UserId ""}}
             <p><strong>User ID:</strong> {{.UserId}}</p>
@@ -15,6 +15,9 @@
         <p><strong>Item ID:</strong> {{.Id}}</p>
         <p><strong>Title:</strong> {{.Title}}</p>
         <p><strong>Complete:</strong> {{.Complete}}</p>
+    {{end}}
+    {{if eq .Title ""}}
+        <h2>Item not found!</h2>
     {{end}}
     <br>
     <ul class="navbar">

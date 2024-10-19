@@ -20,13 +20,15 @@ import (
 func TestConcurrentPutRequests(t *testing.T) {
 	stores := []datastores.DataStore{
 		datastores.NewInMemDataStore(),
-		datastores.NewJsonDatastore("store.json")}
+		datastores.NewJsonDatastore("store.json"),
+	}
 	items := make([]models.ToDo, 0)
 	statuses := []bool{true, false}
 	priorities := []string{models.PriorityLow, models.PriorityMedium, models.PriorityHigh}
 	for i := 0; i < 10; i++ {
 		items = append(items, models.ToDo{Id: uuid.New(), Title: "test", Priority: "High", Complete: false, UserId: uuid.New().String()})
 	}
+	items[0].Validate("v1")
 	wiring.WireEndpoints()
 	for _, datastore := range stores {
 		for _, item := range items {

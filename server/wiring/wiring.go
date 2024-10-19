@@ -171,8 +171,19 @@ func serveItem(w http.ResponseWriter, item models.ToDo) {
 		http.Error(w, "Error parsing template", http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(item)
 	err = tmpl.Execute(w, item)
+	if err != nil {
+		http.Error(w, "Error rendering template", http.StatusInternalServerError)
+	}
+}
+
+func itemNotFound(w http.ResponseWriter, message string) {
+	tmpl, err := template.ParseFiles("./templates/notfound.html")
+	if err != nil {
+		http.Error(w, "Error parsing template", http.StatusInternalServerError)
+		return
+	}
+	err = tmpl.Execute(w, message)
 	if err != nil {
 		http.Error(w, "Error rendering template", http.StatusInternalServerError)
 	}
@@ -258,7 +269,11 @@ func PostputToDo(w http.ResponseWriter, r *http.Request, f func(item models.ToDo
 	if err != nil {
 		writeErrorResponse(w, r, http.StatusInternalServerError, "Internal Server Error")
 	}
-	writeJSONResponse(w, r, http.StatusCreated, resp)
+	if r.Method == http.MethodPost {
+		writeJSONResponse(w, r, http.StatusCreated, resp)
+	} else {
+		writeJSONResponse(w, r, http.StatusOK, resp)
+	}
 }
 
 func getToDo(w http.ResponseWriter, r *http.Request) {
@@ -267,23 +282,28 @@ func getToDo(w http.ResponseWriter, r *http.Request) {
 	ver := strings.Split(r.URL.Path, "/")[1]
 	if id == "" {
 		writeErrorResponse(w, r, http.StatusBadRequest, "missing 'id' query paramater")
+		return
 	}
 	if userId == "" && ver == "v2" {
 		writeErrorResponse(w, r, http.StatusBadRequest, "missing 'user_id' query paramater")
+		return
 	}
 	uuid, err := uuid.Parse(id)
 	if err != nil {
 		writeErrorResponse(w, r, http.StatusBadGateway, fmt.Sprintf("error parsing uuid: %s", err.Error()))
+		return
 	}
 	item, err := datastore.GetItem(userId, uuid)
 	if err != nil {
 		handleDataStoreError(w, r, err)
+		return
 	}
 	resp, err := json.Marshal(item)
 	if err != nil {
 		writeErrorResponse(w, r, http.StatusInternalServerError, "Internal Server Error")
+		return
 	}
-	writeJSONResponse(w, r, http.StatusCreated, resp)
+	writeJSONResponse(w, r, http.StatusOK, resp)
 }
 
 func ToDoHandler(w http.ResponseWriter, r *http.Request) {
