@@ -80,5 +80,5 @@ func NewToDo(userId *string, id *string, title *string, priority *string, comple
 	if err != nil {
 		return ToDo{}, &todoerrors.ValidationError{Field: *priority, Err: err}
 	}
-	return ToDo{Id: uuid, Title: *title, Priority: p, Complete: *complete}, nil
+	return ToDo{Id: uuid, Title: *title, Priority: p, Complete: *complete, UserId: *userId}, nil
 }

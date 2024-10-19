@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
     {{if eq . "GET"}}
         <title>Search Items</title>
     {{end}}
@@ -12,11 +13,18 @@
     {{if eq . "POST"}}
         <title>Add Item</title>
     {{end}}
-    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Lookup Item</h1>
+        {{if eq . "GET"}}
+            <h1>Search Items</h1>
+        {{end}}
+        {{if eq . "PUT"}}
+            <h1>Update Item</h1>
+        {{end}}
+        {{if eq . "POST"}}
+            <h1>Add Item</h1>
+        {{end}}
         <!-- Radio buttons to select the API version -->
         <input type="radio" id="v1" name="version" checked>
         <label for="v1">v1</label>
@@ -25,6 +33,7 @@
 
         <!-- Form for v1 -->
         <div class="form-container form-v1">
+            
             <form action="/item" method={{.}}>
                 <input type="hidden" id="api_version" name="api_version" value="v1">
                 <label for="item_id_v1">Item ID</label>

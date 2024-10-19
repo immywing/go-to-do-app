@@ -45,7 +45,7 @@ func WireEndpoints() {
 	})
 	http.HandleFunc("/v1/todo", ToDoHandler)
 	http.HandleFunc("/v2/todo", ToDoHandler)
-	//web ui handlers
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		tmpl, _ := template.ParseFiles("./templates/home.html")
 		tmpl.Execute(w, nil)
@@ -53,7 +53,7 @@ func WireEndpoints() {
 	http.HandleFunc("/search", handleFormGet)
 	http.HandleFunc("/update", handleFormPut)
 	http.HandleFunc("/add", handleFormPost)
-	http.HandleFunc("/item", handleItem)
+	http.HandleFunc("/item", handleWebForm)
 }
 
 func Start(store *datastores.DataStore, shutdownChan chan bool) {
@@ -78,40 +78,39 @@ func Start(store *datastores.DataStore, shutdownChan chan bool) {
 	shutdownChan <- true
 }
 
-func handleFormGet(w http.ResponseWriter, r *http.Request) {
-	serveForm(w, "GET")
-}
-
-func handleFormPut(w http.ResponseWriter, r *http.Request) {
-	serveForm(w, "PUT")
-}
-
-func handleFormPost(w http.ResponseWriter, r *http.Request) {
-	serveForm(w, "POST")
-}
-
-func serveForm(w http.ResponseWriter, method string) {
-	tmpl, err := template.ParseFiles("./templates/todoform.html")
+func staticTemplate(w http.ResponseWriter, data interface{}, path string) {
+	tmpl, err := template.ParseFiles(path)
 	if err != nil {
 		http.Error(w, "Error parsing template", http.StatusInternalServerError)
 		return
 	}
-	err = tmpl.Execute(w, method)
+	err = tmpl.Execute(w, data)
 	if err != nil {
 		http.Error(w, "Error rendering template", http.StatusInternalServerError)
 	}
 }
 
-func handleItem(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		handleWebGet(w, r)
-	case http.MethodPost, http.MethodPut:
-		handleWebPostPut(w, r, r.Method)
-	}
+func serveItem(w http.ResponseWriter, item models.ToDo) {
+	staticTemplate(w, item, "./templates/todoitem.html")
 }
 
-func handleWebPostPut(w http.ResponseWriter, r *http.Request, m string) {
+func itemNotFound(w http.ResponseWriter, message string) {
+	staticTemplate(w, message, "./templates/notfound.html")
+}
+
+func handleFormGet(w http.ResponseWriter, r *http.Request) {
+	staticTemplate(w, "GET", "./templates/todoform.html")
+}
+
+func handleFormPut(w http.ResponseWriter, r *http.Request) {
+	staticTemplate(w, "PUT", "./templates/todoform.html")
+}
+
+func handleFormPost(w http.ResponseWriter, r *http.Request) {
+	staticTemplate(w, "POST", "./templates/todoform.html")
+}
+
+func handleWebForm(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Error parsing form data", http.StatusBadRequest)
 		return
@@ -122,81 +121,34 @@ func handleWebPostPut(w http.ResponseWriter, r *http.Request, m string) {
 	title := r.FormValue("title")
 	priority := r.FormValue("priority")
 	complete := r.FormValue("complete") == "true"
-	itemIn, err := models.NewToDo(&userID, &itemID, &title, &priority, &complete)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+	var apiURL string
+	var req *http.Request
+	var itemIn models.ToDo
+	var buffer []byte
+	var err error
+	if r.Method == http.MethodGet {
+		apiURL = fmt.Sprintf("http://localhost:8081/%s/todo?user_id=%s&id=%s", apiVer, userID, itemID)
 	}
-	json, err := json.Marshal(itemIn)
-	if err != nil {
-		http.Error(w, "failed to construct item json body", http.StatusInternalServerError)
-		return
+	fmt.Println(userID, itemID, title, priority, complete)
+	if r.Method == http.MethodPut || r.Method == http.MethodPost {
+		apiURL = fmt.Sprintf("http://localhost:8081/%s/todo", apiVer)
+		itemIn, err = models.NewToDo(&userID, &itemID, &title, &priority, &complete)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		buffer, err = json.Marshal(itemIn)
+		if err != nil {
+			http.Error(w, "failed to construct item json body", http.StatusInternalServerError)
+			return
+		}
 	}
-	apiURL := fmt.Sprintf("http://localhost:8081/%s/todo?", apiVer)
-	var resp *http.Response
-	if m == http.MethodPost {
-		resp, err = http.Post(apiURL, "application/json", bytes.NewBuffer(json))
-	} else {
-		var req *http.Request
-		req, err = http.NewRequest(m, apiURL, bytes.NewBuffer(json))
-		c := http.Client{}
-		resp, err = c.Do(req)
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		http.Error(w, "Error reading response", http.StatusInternalServerError)
-		return
-	}
-	item, err := unpackToDoItem(body)
-	if err != nil {
-		http.Error(w, "failed unmarshamlling response", http.StatusInternalServerError)
-		return
-	}
-	serveItem(w, item)
-}
-
-func unpackToDoItem(body []byte) (models.ToDo, error) {
+	req, err = http.NewRequest(r.Method, apiURL, bytes.NewBuffer(buffer))
+	c := http.Client{}
 	var item models.ToDo
-	err := json.Unmarshal(body, &item)
+	resp, err := c.Do(req)
 	if err != nil {
-		return models.ToDo{}, nil
-	}
-	return item, nil
-}
-
-func serveItem(w http.ResponseWriter, item models.ToDo) {
-	tmpl, err := template.ParseFiles("./templates/todoitem.html")
-	if err != nil {
-		http.Error(w, "Error parsing template", http.StatusInternalServerError)
-		return
-	}
-	err = tmpl.Execute(w, item)
-	if err != nil {
-		http.Error(w, "Error rendering template", http.StatusInternalServerError)
-	}
-}
-
-func itemNotFound(w http.ResponseWriter, message string) {
-	tmpl, err := template.ParseFiles("./templates/notfound.html")
-	if err != nil {
-		http.Error(w, "Error parsing template", http.StatusInternalServerError)
-		return
-	}
-	err = tmpl.Execute(w, message)
-	if err != nil {
-		http.Error(w, "Error rendering template", http.StatusInternalServerError)
-	}
-}
-
-func handleWebGet(w http.ResponseWriter, r *http.Request) {
-	apiVer := r.URL.Query().Get("api_version")
-	userID := r.URL.Query().Get("user_id")
-	itemID := r.URL.Query().Get("id")
-	apiURL := fmt.Sprintf("http://localhost:8081/%s/todo?user_id=%s&id=%s", apiVer, userID, itemID)
-	resp, err := http.Get(apiURL)
-	if err != nil {
-		http.Error(w, "Error calling internal API", http.StatusInternalServerError)
+		http.Error(w, "Internal Server error", http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
@@ -205,7 +157,7 @@ func handleWebGet(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error reading response", http.StatusInternalServerError)
 		return
 	}
-	item, err := unpackToDoItem(body)
+	err = json.Unmarshal(body, &item)
 	if err != nil {
 		http.Error(w, "failed unmarshamlling response", http.StatusInternalServerError)
 		return
@@ -226,7 +178,7 @@ func writeJSONResponse(w http.ResponseWriter, r *http.Request, statusCode int, d
 }
 
 func writeErrorResponse(w http.ResponseWriter, r *http.Request, statusCode int, message string) {
-	writeJSONResponse(w, r, statusCode, []byte(fmt.Sprintf(`{"error": %s}`, message)))
+	writeJSONResponse(w, r, statusCode, []byte(fmt.Sprintf(`{"error": "%s"}`, message)))
 }
 
 func handleDataStoreError(w http.ResponseWriter, r *http.Request, err error) {

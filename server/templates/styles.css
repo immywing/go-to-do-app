@@ -14,14 +14,6 @@ body {
     padding: 20px;
 }
 
-/* Headings */
-h1, h2 {
-    margin-bottom: 20px;
-    color: #f0f0f0;
-    text-align: center;
-    display: flex;
-}
-
 /* Paragraphs */
 p {
     margin: 5px 0;
@@ -196,12 +188,17 @@ label[for="item_complete_true_v2"], label[for="item_complete_false_v2"]
 }
 
 .container {
-    margin: auto;
     max-width: 400px;
     padding: 20px;
     background-color: #3c3c3c;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+h1, h2 {
+    margin-bottom: 20px;
+    color: #f0f0f0;
+    text-align: center;
 }
 
 /* Hide all forms by default */
