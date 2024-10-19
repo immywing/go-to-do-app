@@ -8,8 +8,9 @@ import (
 	"io"
 	"net/http"
 	"time"
-	"to-do-app/logging"
-	"to-do-app/models"
+
+	"github.com/immy/go-to-do-app/to-do-lib/logging"
+	"github.com/immy/go-to-do-app/to-do-lib/models"
 
 	"github.com/google/uuid"
 )

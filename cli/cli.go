@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"flag"
-	"to-do-app/logging"
-	"to-do-app/models"
 
-	"to-do-app/apiclient"
+	"github.com/immy/go-to-do-app/to-do-lib/apiclient"
+	"github.com/immy/go-to-do-app/to-do-lib/logging"
+	"github.com/immy/go-to-do-app/to-do-lib/models"
 )
 
 var (

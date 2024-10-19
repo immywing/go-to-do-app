@@ -10,10 +10,11 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	datastores "to-do-app/datastores"
-	todoerrors "to-do-app/errors"
-	"to-do-app/logging"
-	"to-do-app/models"
+
+	"github.com/immy/go-to-do-app/to-do-lib/datastores"
+	"github.com/immy/go-to-do-app/to-do-lib/logging"
+	"github.com/immy/go-to-do-app/to-do-lib/models"
+	"github.com/immy/go-to-do-app/to-do-liberrors"
 
 	"github.com/google/uuid"
 )

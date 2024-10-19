@@ -2,8 +2,9 @@ package datastores_test
 
 import (
 	"testing"
-	"to-do-app/datastores"
-	"to-do-app/models"
+
+	"github.com/immy/go-to-do-app/to-do-lib/datastores"
+	"github.com/immy/go-to-do-app/to-do-lib/models"
 
 	"github.com/google/uuid"
 )

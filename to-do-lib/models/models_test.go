@@ -2,7 +2,8 @@ package models_test
 
 import (
 	"testing"
-	"to-do-app/models"
+
+	"github.com/immy/go-to-do-app/to-do-lib/models"
 )
 
 func TestParsePriorityWithValidStrings(t *testing.T) {

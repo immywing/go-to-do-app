@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"os"
 	"sync"
-	todoerrors "to-do-app/errors"
-	"to-do-app/logging"
-	"to-do-app/models"
+
+	todoerrors "github.com/immy/go-to-do-app/to-do-lib/errors"
+	"github.com/immy/go-to-do-app/to-do-lib/logging"
+	"github.com/immy/go-to-do-app/to-do-lib/models"
 
 	"github.com/google/uuid"
 )

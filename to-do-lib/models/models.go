@@ -4,7 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	todoerrors "to-do-app/errors"
+
+	todoerrors "github.com/immy/go-to-do-app/to-do-lib/errors"
 
 	"github.com/google/uuid"
 )
