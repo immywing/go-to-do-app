@@ -1,6 +1,2 @@
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-go-to-do-app/server v0.0.0-20241019150842-ed294e1a9338 h1:yo8X0ZpS5Nsluk3SImkoJBNc7O90YMOF2oiuhcXWDkw=
-go-to-do-app/server v0.0.0-20241019150842-ed294e1a9338/go.mod h1:xJyGtXy0mVcPff8Fwya/0s0VTbKWN10Iyk+a1tMmusE=
-go-to-do-app/to-do-lib v0.0.0-20241019150842-ed294e1a9338 h1:5ZbCGZNkBhvt+NbVpP2JTDTjVS780xFSf8787ygaI4Y=
-go-to-do-app/to-do-lib v0.0.0-20241019150842-ed294e1a9338/go.mod h1:8JXJpfizhWboKKmfNvmkCYnUqM+H3m19ah8YBDtqxnA=

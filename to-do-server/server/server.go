@@ -1,4 +1,4 @@
-package wiring
+package server
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"go-to-do-app/cli/apiclient"
+	"go-to-do-app/to-do-lib/apiclient"
 	"go-to-do-app/to-do-lib/datastores"
 	todoerrors "go-to-do-app/to-do-lib/errors"
 	"go-to-do-app/to-do-lib/logging"
@@ -22,7 +22,7 @@ var (
 	datastore datastores.DataStore
 )
 
-func WireEndpoints() {
+func wiredMux() *http.ServeMux {
 	routes := map[string]http.HandlerFunc{
 		"/":                serveTemplate("./templates/home.html", nil),
 		"/styles.css":      serveFile("./templates/styles.css"),
@@ -38,9 +38,31 @@ func WireEndpoints() {
 		"/item":            handleWebForm,
 	}
 
+	mux := http.NewServeMux()
 	for route, handler := range routes {
-		http.HandleFunc(route, handler)
+		mux.HandleFunc(route, handler)
 	}
+	return mux
+}
+
+func Start(store *datastores.DataStore, shutdownChan chan bool) {
+	datastore = *store
+	srv := &http.Server{Addr: ":8081", Handler: wiredMux()}
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("ListenAndServe error: %v\n", err)
+		}
+	}()
+	<-shutdownChan
+	datastore.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		fmt.Printf("Server Shutdown error: %v\n", err)
+	} else {
+		fmt.Println("Server shut down gracefully")
+	}
+	shutdownChan <- true
 }
 
 func serveFile(filePath string) http.HandlerFunc {
@@ -61,26 +83,6 @@ func serveTemplate(path string, data interface{}) http.HandlerFunc {
 			http.Error(w, "Error rendering template", http.StatusInternalServerError)
 		}
 	}
-}
-
-func Start(store *datastores.DataStore, shutdownChan chan bool) {
-	datastore = *store
-	srv := &http.Server{Addr: ":8081"}
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			fmt.Printf("ListenAndServe error: %v\n", err)
-		}
-	}()
-	<-shutdownChan
-	datastore.Close()
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		fmt.Printf("Server Shutdown error: %v\n", err)
-	} else {
-		fmt.Println("Server shut down gracefully")
-	}
-	shutdownChan <- true
 }
 
 func handleWebForm(w http.ResponseWriter, r *http.Request) {

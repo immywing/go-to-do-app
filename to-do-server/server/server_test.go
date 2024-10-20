@@ -1,4 +1,4 @@
-package wiring_test
+package server_test
 
 import (
 	"bytes"
@@ -10,9 +10,9 @@ import (
 	"sync"
 	"testing"
 
-	"go-to-do-app/server/wiring"
 	"go-to-do-app/to-do-lib/datastores"
 	"go-to-do-app/to-do-lib/models"
+	"go-to-do-app/to-do-server/server"
 
 	"github.com/google/uuid"
 )
@@ -29,13 +29,13 @@ func TestConcurrentPutRequests(t *testing.T) {
 		items = append(items, models.ToDo{Id: uuid.New(), Title: "test", Priority: "High", Complete: false, UserId: uuid.New().String()})
 	}
 	items[0].Validate("v1")
-	wiring.WireEndpoints()
+	// wiring.WireEndpoints()
 	for _, datastore := range stores {
 		for _, item := range items {
 			datastore.AddItem(item)
 		}
 		shutdownChan := make(chan bool)
-		go wiring.Start(&datastore, shutdownChan)
+		go server.Start(&datastore, shutdownChan)
 
 		var wg sync.WaitGroup
 		numRequests := 100000

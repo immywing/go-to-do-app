@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"go-to-do-app/cli/apiclient"
+	"go-to-do-app/to-do-lib/apiclient"
 	"go-to-do-app/to-do-lib/logging"
 	"go-to-do-app/to-do-lib/models"
 )

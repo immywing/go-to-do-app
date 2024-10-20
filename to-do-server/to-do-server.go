@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go-to-do-app/server/wiring"
 	"go-to-do-app/to-do-lib/datastores"
 	"go-to-do-app/to-do-lib/logging"
+	"go-to-do-app/to-do-server/server"
 )
 
 var (
@@ -63,8 +63,8 @@ func run() {
 		os.Exit(1)
 	}
 
-	wiring.WireEndpoints()
-	go wiring.Start(&store, shutdownChan) // Start server in a goroutine
+	// wiring.WireEndpoints()
+	go server.Start(&store, shutdownChan) // Start server in a goroutine
 	listenForClose()
 	<-shutdownChan
 }

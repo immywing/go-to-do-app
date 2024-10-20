@@ -21,8 +21,8 @@ Before running the [CLI] it's important to start the [Server] application, as it
 When you're ready to get started, see [CLI docs]
 
 [CLI]: cli/cli.go
-[Server]: server/server.go
+[Server]: to-do-server/to-do-server.go
 [CLI docs]: cli/readme.md
-[server docs]: server/readme.md
-[V1 API]: server/api-specs/to-do-app-api-v1.yaml
-[V2 API]: server/api-specs/to-do-app-api-v2.yaml
+[server docs]: to-do-server/readme.md
+[V1 API]: to-do-server/api-specs/to-do-app-api-v1.yaml
+[V2 API]: to-do-server/api-specs/to-do-app-api-v2.yaml
