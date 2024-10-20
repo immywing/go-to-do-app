@@ -2,9 +2,8 @@
 
 ## Quickstart
 
-<p>
-Running the server application can be done from the [server](../server/) sub directory with `go run .` followed by the required flags that provide detail to the application about which datastore implementation it should utilise.
-<p>
+Running the server application can be done from the to-do-server directory with `go run .` followed by the required flags that provide detail to the application about which datastore implementation it should utilise.
+
 
 > `--mode=<in-mem|json-store|pgdb>` instructs the server the type of datastore to use.
 
