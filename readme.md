@@ -1,32 +1,28 @@
 # Go Programming Exercise - To-Do App
 
+## Current phase of development: 3
+
 ## Quickstart
 
-Current phase of development: 3
+The project has two `main` packages, the [CLI] & the [Server].
 
-To see a full list of flags available to the CLI use `go run . -h`
+The ToDo [CLI] acts as a command line client application that can make requests to the ToDo [Server].
 
-### Windows
+The ToDo [Server] hosts the endpoints for the [V1 API], [V2 API] and the client appilication (add more info here)
 
-1. Build the application :<br> 
-`go build -o todo-app.exe` 
-2. Start the Server in it's own terminal:<br>
-`start todo-app.exe --start-server --mode=in-mem`
-3. Use the CLI to make a test request to the server:<br>
-`go run . --post --id=3fa85f64-5717-4562-b3fc-2c963f66afa6 --title=test --priority=high`
+### Server application
 
-### Linux
+To get started with the Server Application, see [server docs]
 
-1. Start the server in the background <br>
-`go run . --start-server --mode=in-mem &`
-2. Use the CLI to make a test request to the server:<br>
-`go run . --post --id=3fa85f64-5717-4562-b3fc-2c963f66afa6 --title=test --priority=high`
+### CLI
 
-## API
+Before running the [CLI] it's important to start the [Server] application, as it makes requests via the REST API. 
 
-- v1 <pr>The API spec can found at http://localhost:8081/v1/swagger-ui</pr>
-- v2 <pr>The API spec can found at http://localhost:8081/v2/swagger-ui</pr>
+When you're ready to get started, see [CLI docs]
 
-## Wishlist
-
-- mutex attached to todo item records, to enable more peformant locking method to improve overall api performance. Primary reason not implemented so far: Json store loads and saves on every query. Which is terribly unperformant, and would benefit from more regerous control. That being said, there is nothing stopping mutex being added the the ToDo struct allowing for better locking performance on the in-mem store. A presumption, is that this would be of less of a concern when wired to a PGDB, as it will adhere to ACID, and enable locking of records.
+[CLI]: cli/cli.go
+[Server]: server/server.go
+[CLI docs]: cli/readme.md
+[server docs]: server/readme.md
+[V1 API]: server/api-specs/to-do-app-api-v1.yaml
+[V2 API]: server/api-specs/to-do-app-api-v2.yaml

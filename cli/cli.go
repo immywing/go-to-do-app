@@ -38,9 +38,9 @@ func cliParse() {
 	var item models.ToDo
 	ctx := logging.AddTraceID(context.Background())
 	client := apiclient.NewAPIClient("http://localhost:8081/")
-	if serverup, err := client.PingServer(); !serverup || err != nil {
-		// logging.LogWithTrace(ctx, todoflags, "failed to ping server. check server is alive.")
-	}
+	// if serverup, err := client.PingServer(); !serverup || err != nil {
+	// 	// logging.LogWithTrace(ctx, todoflags, "failed to ping server. check server is alive.")
+	// }
 	if *post || *put {
 		var err error
 		item, err = models.NewToDo(userId, id, title, priority, complete)
