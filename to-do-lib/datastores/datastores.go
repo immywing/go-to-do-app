@@ -74,8 +74,6 @@ func (ds *inMemDatastore) UpdateItem(item models.ToDo) (models.ToDo, error) {
 			rec.Lock()
 			defer rec.Unlock()
 			rec.data = item
-			// ds.Items[item.UserId][item.Id] = item
-
 			return ds.Items[item.UserId][item.Id].data, nil
 		}
 	}
@@ -83,7 +81,7 @@ func (ds *inMemDatastore) UpdateItem(item models.ToDo) (models.ToDo, error) {
 }
 
 func (ds *inMemDatastore) Close() {
-
+	//no action for in mem
 }
 
 func NewInMemDataStore() DataStore {

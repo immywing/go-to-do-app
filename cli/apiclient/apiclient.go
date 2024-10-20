@@ -5,14 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"time"
 
-	"go-to-do-app/to-do-lib/logging"
 	"go-to-do-app/to-do-lib/models"
-
-	"github.com/google/uuid"
 )
 
 type APIClient struct {
@@ -20,70 +15,50 @@ type APIClient struct {
 	httpClient *http.Client
 }
 
-func (c *APIClient) Get(ctx context.Context, id string, user_id string, version string) {
-	uuid, err := uuid.Parse(id)
-	if err != nil {
-		logging.LogWithTrace(ctx, map[string]interface{}{"uuid": uuid}, err.Error())
+func (c *APIClient) Req(
+	ctx context.Context,
+	m string,
+	initem models.ToDo, args map[string]string) (models.ToDo, error) {
+
+	var apiURL string
+	var req *http.Request
+	var itemIn models.ToDo
+	var buffer []byte
+	var err error
+	userid := args["user-id"]
+	itemid := args["id"]
+	version := args["version"]
+	title := args["title"]
+	priority := args["priority"]
+	complete := args["complete"] == "true"
+	fmt.Println(complete, m)
+	if m == http.MethodGet {
+		apiURL = fmt.Sprintf("http://localhost:8081/%s/todo?user_id=%s&id=%s",
+			version, userid, itemid)
 	}
-	url := fmt.Sprintf("%s%s/todo?id=%s&user_id=%s", c.BaseURL, version, id, user_id)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		fmt.Println("Error creating request:", err)
-		return
+	if m == http.MethodPut || m == http.MethodPost {
+		apiURL = fmt.Sprintf("http://localhost:8081/%s/todo", args["version"])
+		itemIn, err = models.NewToDo(&userid, &itemid, &title, &priority, &complete)
+		fmt.Println(itemIn)
+		if err != nil {
+			return models.ToDo{}, err
+		}
+		buffer, err = json.Marshal(itemIn)
+		if err != nil {
+			return models.ToDo{}, err
+		}
 	}
-	req.Header.Set("Accept", "application/json")
+	req, err = http.NewRequest(m, apiURL, bytes.NewBuffer(buffer))
+	var item models.ToDo
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		fmt.Println("Error performing GET request:", err)
-		return
+		return models.ToDo{}, err
 	}
 	defer resp.Body.Close()
-	body, _ := io.ReadAll(resp.Body)
-	logData := map[string]interface{}{
-		"method":       "GET",
-		"url":          url,
-		"statusCode":   resp.StatusCode,
-		"responseBody": string(body),
-		"error":        err,
+	if err := json.NewDecoder(resp.Body).Decode(&item); err != nil {
+		return models.ToDo{}, err
 	}
-	logging.LogWithTrace(ctx, logData, "GET request from CLI")
-}
-
-func (c *APIClient) Send(ctx context.Context, item models.ToDo, method string, version string) {
-	body, _ := json.Marshal(item)
-	temp := "/todo"
-	fmt.Println(fmt.Sprintf("%s%s%s", c.BaseURL, version, temp))
-	req, err := http.NewRequest(method, fmt.Sprintf("%s%s%s", c.BaseURL, version, temp), bytes.NewBuffer(body))
-	if err != nil {
-		logging.LogWithTrace(
-			ctx, map[string]interface{}{"header": req.Header, "body": req.Body}, "Failed request")
-		return
-	}
-	req.Header.Set("Accept", "application/json")
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		fmt.Println("Error performing POST request:", err)
-		return
-	}
-	defer resp.Body.Close()
-	body, _ = io.ReadAll(resp.Body)
-	logData := map[string]interface{}{
-		"method":       "POST",
-		"url":          c.BaseURL,
-		"statusCode":   resp.StatusCode,
-		"responseBody": string(body),
-	}
-	logging.LogWithTrace(ctx, logData, "POST request from CLI")
-}
-
-func (c *APIClient) PingServer() (bool, error) {
-	c.httpClient.Timeout = 2 * time.Second
-	resp, err := c.httpClient.Get(c.BaseURL)
-	if err != nil {
-		return false, err
-	}
-	defer resp.Body.Close()
-	return resp.StatusCode == http.StatusOK, nil
+	return item, nil
 }
 
 func NewAPIClient(baseURL string) APIClient {
