@@ -33,7 +33,7 @@ func wiredMux() *http.ServeMux {
 		"/v1/todo":         ToDoHandler,
 		"/v2/todo":         ToDoHandler,
 		"/search":          serveTemplate("./templates/todoform.html", "GET"),
-		"/update":          serveTemplate("./templates/todoform.html", "POST"),
+		"/update":          serveTemplate("./templates/todoform.html", "PUT"),
 		"/add":             serveTemplate("./templates/todoform.html", "POST"),
 		"/item":            handleWebForm,
 	}
@@ -91,6 +91,7 @@ func handleWebForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	method := r.FormValue("form_method")
+	fmt.Println(method)
 	args := map[string]string{
 		"user-id":  r.FormValue("user_id"),
 		"id":       r.FormValue("id"),
