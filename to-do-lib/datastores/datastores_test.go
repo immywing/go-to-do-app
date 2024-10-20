@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"go-to-do-app/to-do-lib/datastores"
+	todoerrors "go-to-do-app/to-do-lib/errors"
 	"go-to-do-app/to-do-lib/models"
 
 	"github.com/google/uuid"
@@ -29,6 +30,17 @@ func TestInMemUpdateToDo(t *testing.T) {
 	actual, _ := store.UpdateItem(expected)
 	if actual != expected {
 		t.Errorf("Expected: %+v, Got: %+v", expected, actual)
+	}
+}
+
+func TestUpdateNonExistientToDo(t *testing.T) {
+	store := datastores.NewInMemDataStore()
+	td := models.ToDo{Id: uuid.New(), Title: "test", Priority: "Low", Complete: false, UserId: uuid.New().String()}
+	expected := todoerrors.NotFoundError{Message: "ToDo Not Found"}
+	_, actual := store.UpdateItem(td)
+	_, ok := actual.(*todoerrors.NotFoundError)
+	if !ok {
+		t.Errorf("Expected: %T, Got: %T", expected, actual)
 	}
 }
 
