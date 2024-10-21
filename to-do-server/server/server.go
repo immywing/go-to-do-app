@@ -18,31 +18,27 @@ import (
 	"github.com/google/uuid"
 )
 
-var (
-	datastore datastores.DataStore
-)
-
 type ToDoServer struct {
 	server       *http.Server
-	ShutdownChan chan bool
+	shutdownChan chan bool
 }
 
-func NewToDoServer(address string, shutdownChannel chan bool) ToDoServer {
+func NewToDoServer(address string, shutdownChannel chan bool, datastore datastores.DataStore) ToDoServer {
 	return ToDoServer{
-		server:       &http.Server{Addr: address, Handler: wiredMux()},
-		ShutdownChan: shutdownChannel,
+		server:       &http.Server{Addr: address, Handler: wiredMux(datastore)},
+		shutdownChan: shutdownChannel,
 	}
 }
 
 func (s *ToDoServer) Shutdown() {
-	s.ShutdownChan <- true
+	s.shutdownChan <- true
 }
 
 func (s *ToDoServer) AwaitShutdown() {
-	<-s.ShutdownChan
+	<-s.shutdownChan
 }
 
-func wiredMux() *http.ServeMux {
+func wiredMux(datastore datastores.DataStore) *http.ServeMux {
 	routes := map[string]http.HandlerFunc{
 		"/":                serveTemplate("./templates/home.html", nil),
 		"/styles.css":      serveFile("./templates/styles.css"),
@@ -50,8 +46,8 @@ func wiredMux() *http.ServeMux {
 		"/v2/swagger.yaml": serveFile("./api-specs/to-do-app-api-v2.yaml"),
 		"/v1/swagger-ui":   serveTemplate("./templates/swagger-ui-template.html", "v1"),
 		"/v2/swagger-ui":   serveTemplate("./templates/swagger-ui-template.html", "v2"),
-		"/v1/todo":         ToDoHandler,
-		"/v2/todo":         ToDoHandler,
+		"/v1/todo":         toDoHTTPHandler(datastore),
+		"/v2/todo":         toDoHTTPHandler(datastore),
 		"/search":          serveTemplate("./templates/todoform.html", "GET"),
 		"/update":          serveTemplate("./templates/todoform.html", "PUT"),
 		"/add":             serveTemplate("./templates/todoform.html", "POST"),
@@ -65,15 +61,13 @@ func wiredMux() *http.ServeMux {
 	return mux
 }
 
-func (s *ToDoServer) Start(store *datastores.DataStore, shutdownChan chan bool) {
-	datastore = *store
+func (s *ToDoServer) Start() {
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			fmt.Printf("ListenAndServe error: %v\n", err)
 		}
 	}()
-	<-shutdownChan
-	datastore.Close()
+	<-s.shutdownChan
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	if err := s.server.Shutdown(ctx); err != nil {
@@ -81,12 +75,18 @@ func (s *ToDoServer) Start(store *datastores.DataStore, shutdownChan chan bool) 
 	} else {
 		fmt.Println("Server shut down gracefully")
 	}
-	shutdownChan <- true
+	s.shutdownChan <- true
 }
 
 func serveFile(filePath string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filePath)
+	}
+}
+
+func toDoHTTPHandler(datastore datastores.DataStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		toDoHandler(datastore, w, r)
 	}
 }
 
@@ -179,7 +179,7 @@ func PostputToDo(w http.ResponseWriter, r *http.Request, f func(item models.ToDo
 	MarshalAndWrite(w, r, item)
 }
 
-func getToDo(w http.ResponseWriter, r *http.Request) {
+func getToDo(datastore datastores.DataStore, w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	userId := r.URL.Query().Get("user_id")
 	ver := strings.Split(r.URL.Path, "/")[1]
@@ -205,10 +205,10 @@ func MarshalAndWrite(w http.ResponseWriter, r *http.Request, b interface{}) {
 	WriteJSONResponse(w, r, http.StatusOK, resp)
 }
 
-func ToDoHandler(w http.ResponseWriter, r *http.Request) {
+func toDoHandler(datastore datastores.DataStore, w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		getToDo(w, r)
+		getToDo(datastore, w, r)
 	case http.MethodPost:
 		PostputToDo(w, r, datastore.AddItem)
 	case http.MethodPut:

@@ -20,7 +20,7 @@ var (
 	shutdownChan = make(chan bool)
 )
 
-func listenForClose(server server.ToDoServer) {
+func listenForShutdownCommand(server server.ToDoServer) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Todo server running\n!Q to close the server")
 	for {
@@ -39,12 +39,22 @@ func run() {
 	flag.Parse()
 
 	var store datastores.DataStore
+	if *mode == "" {
+		logging.LogWithTrace(
+			context.Background(),
+			map[string]interface{}{},
+			"no valid mode provided to start server with datastore",
+		)
+		os.Exit(1)
+	}
 	if *mode == "pgdb" {
 		fmt.Fprintf(os.Stderr, "Error: the mode '%s' is not yet implemented\n", *mode)
 		os.Exit(1)
-	} else if *mode == "in-mem" {
+	}
+	if *mode == "in-mem" {
 		store = datastores.NewInMemDataStore()
-	} else if *mode == "json-store" {
+	}
+	if *mode == "json-store" {
 		if filepath.Ext(*jsonPath) != ".json" {
 			logging.LogWithTrace(
 				context.Background(),
@@ -54,18 +64,11 @@ func run() {
 			os.Exit(1)
 		}
 		store = datastores.NewJsonDatastore(*jsonPath)
-	} else {
-		logging.LogWithTrace(
-			context.Background(),
-			map[string]interface{}{},
-			"no valid mode provided to start server with datastore",
-		)
-		os.Exit(1)
 	}
 
-	srv := server.NewToDoServer("8080:", shutdownChan)
-	go srv.Start(&store, shutdownChan)
-	listenForClose(srv)
+	srv := server.NewToDoServer(":8081", shutdownChan, store)
+	go srv.Start()
+	listenForShutdownCommand(srv)
 	srv.AwaitShutdown()
 }
 

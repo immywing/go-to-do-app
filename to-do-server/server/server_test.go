@@ -34,8 +34,8 @@ func TestConcurrentPutRequests(t *testing.T) {
 			datastore.AddItem(item)
 		}
 		shutdownChan := make(chan bool)
-		srv := server.NewToDoServer("8080:", shutdownChan)
-		go srv.Start(&datastore, shutdownChan)
+		srv := server.NewToDoServer(":8081", shutdownChan, datastore)
+		go srv.Start()
 
 		var wg sync.WaitGroup
 		numRequests := 100000
