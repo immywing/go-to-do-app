@@ -20,7 +20,7 @@ var (
 	shutdownChan = make(chan bool)
 )
 
-func listenForClose() {
+func listenForClose(server server.ToDoServer) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Todo server running\n!Q to close the server")
 	for {
@@ -29,7 +29,7 @@ func listenForClose() {
 			fmt.Println(err)
 		}
 		if strings.Trim(strings.Fields(text)[0], " \n") == "!Q" {
-			shutdownChan <- true
+			server.Shutdown()
 			break
 		}
 	}
@@ -63,10 +63,10 @@ func run() {
 		os.Exit(1)
 	}
 
-	// wiring.WireEndpoints()
-	go server.Start(&store, shutdownChan) // Start server in a goroutine
-	listenForClose()
-	<-shutdownChan
+	srv := server.NewToDoServer("8080:", shutdownChan)
+	go srv.Start(&store, shutdownChan)
+	listenForClose(srv)
+	srv.AwaitShutdown()
 }
 
 func main() {

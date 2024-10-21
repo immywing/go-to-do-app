@@ -22,6 +22,26 @@ var (
 	datastore datastores.DataStore
 )
 
+type ToDoServer struct {
+	server       *http.Server
+	ShutdownChan chan bool
+}
+
+func NewToDoServer(address string, shutdownChannel chan bool) ToDoServer {
+	return ToDoServer{
+		server:       &http.Server{Addr: address, Handler: wiredMux()},
+		ShutdownChan: shutdownChannel,
+	}
+}
+
+func (s *ToDoServer) Shutdown() {
+	s.ShutdownChan <- true
+}
+
+func (s *ToDoServer) AwaitShutdown() {
+	<-s.ShutdownChan
+}
+
 func wiredMux() *http.ServeMux {
 	routes := map[string]http.HandlerFunc{
 		"/":                serveTemplate("./templates/home.html", nil),
@@ -45,11 +65,10 @@ func wiredMux() *http.ServeMux {
 	return mux
 }
 
-func Start(store *datastores.DataStore, shutdownChan chan bool) {
+func (s *ToDoServer) Start(store *datastores.DataStore, shutdownChan chan bool) {
 	datastore = *store
-	srv := &http.Server{Addr: ":8081", Handler: wiredMux()}
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			fmt.Printf("ListenAndServe error: %v\n", err)
 		}
 	}()
@@ -57,7 +76,7 @@ func Start(store *datastores.DataStore, shutdownChan chan bool) {
 	datastore.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
+	if err := s.server.Shutdown(ctx); err != nil {
 		fmt.Printf("Server Shutdown error: %v\n", err)
 	} else {
 		fmt.Println("Server shut down gracefully")

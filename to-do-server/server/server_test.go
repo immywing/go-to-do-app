@@ -29,13 +29,13 @@ func TestConcurrentPutRequests(t *testing.T) {
 		items = append(items, models.ToDo{Id: uuid.New(), Title: "test", Priority: "High", Complete: false, UserId: uuid.New().String()})
 	}
 	items[0].Validate("v1")
-	// wiring.WireEndpoints()
 	for _, datastore := range stores {
 		for _, item := range items {
 			datastore.AddItem(item)
 		}
 		shutdownChan := make(chan bool)
-		go server.Start(&datastore, shutdownChan)
+		srv := server.NewToDoServer("8080:", shutdownChan)
+		go srv.Start(&datastore, shutdownChan)
 
 		var wg sync.WaitGroup
 		numRequests := 100000
@@ -78,6 +78,6 @@ func TestConcurrentPutRequests(t *testing.T) {
 			}(i)
 		}
 		wg.Wait()
-		shutdownChan <- true
+		srv.Shutdown()
 	}
 }
