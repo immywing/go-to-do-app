@@ -28,7 +28,7 @@ paths:
         description: "ToDo object that needs to be added to the store"
         required: true
         schema:
-          $ref: "#/definitions/ToDoV1"
+          $ref: "#/definitions/ToDoCreate"
       responses:
         "400":
           description: "Invalid input"
@@ -109,6 +109,22 @@ definitions:
       complete:
         type: "boolean"
         default: false
+  ToDoCreate:
+    type: object
+    required:
+      - title
+      - priority
+      - complete
+    properties:
+      title:
+        type: string
+        example: "Complete ToDo App"
+      priority:
+        type: string
+        example: "high"
+      complete:
+        type: boolean
+        example: false
 
 externalDocs:
   description: "Find out more about Swagger"

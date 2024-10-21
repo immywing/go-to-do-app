@@ -28,7 +28,7 @@ paths:
         description: "ToDo object that needs to be added to the store"
         required: true
         schema:
-          $ref: "#/definitions/ToDoV2"
+          $ref: "#/definitions/ToDoCreate"
       responses:
         "400":
           description: "Invalid input"
@@ -78,7 +78,7 @@ paths:
         description: "ID of the user associated with the ToDo"
         required: true
         type: "string"
-        format: "uuid"
+
       responses:
         "200":
           description: "Successful response"
@@ -105,8 +105,8 @@ definitions:
         format: "uuid"
       user_id:
         type: "string"
-        format: "uuid"
         description: "ID of the user associated with the ToDo"
+        example: "ToDoUser1"
       title:
         type: "string"
         example: "Complete ToDo App"
@@ -121,6 +121,26 @@ definitions:
       complete:
         type: "boolean"
         default: false
+  ToDoCreate:
+    type: object
+    required:
+      - user_id
+      - title
+      - priority
+      - complete
+    properties:
+      user_id:
+        type: string
+        example: "ToDoUser1"
+      title:
+        type: string
+        example: "Complete ToDo App"
+      priority:
+        type: string
+        example: "high"
+      complete:
+        type: boolean
+        example: false
 
 externalDocs:
   description: "Find out more about Swagger"

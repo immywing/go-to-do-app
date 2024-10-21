@@ -14,18 +14,18 @@ import (
 	"github.com/google/uuid"
 )
 
-type record struct {
-	mut  sync.Mutex
-	data models.ToDo
-}
+// type record struct {
+// 	mut  sync.Mutex
+// 	data models.ToDo
+// }
 
-func (t *record) Lock() {
-	t.mut.Lock()
-}
+// func (t *record) Lock() {
+// 	t.mut.Lock()
+// }
 
-func (t *record) Unlock() {
-	t.mut.Unlock()
-}
+// func (t *record) Unlock() {
+// 	t.mut.Unlock()
+// }
 
 type DataStore interface {
 	AddItem(item models.ToDo) (models.ToDo, error)
@@ -35,32 +35,28 @@ type DataStore interface {
 }
 
 type inMemDatastore struct {
-	Items map[string]map[uuid.UUID]*record
+	Items map[string]map[uuid.UUID]models.ToDo
 	mut   sync.Mutex
 }
 
 func (ds *inMemDatastore) AddItem(item models.ToDo) (models.ToDo, error) {
+	item.Id = uuid.New()
 	ds.mut.Lock()
 	defer ds.mut.Unlock()
 
 	if user, exists := ds.Items[item.UserId]; exists {
-		rec := user[item.Id]
-		rec.Lock()
-		defer rec.Unlock()
-		rec.data = item
-		// user[item.Id] = item
+		user[item.Id] = item
 	} else {
-		rec := record{mut: sync.Mutex{}, data: item}
-		ds.Items[item.UserId] = map[uuid.UUID]*record{item.Id: &rec}
+		ds.Items[item.UserId] = map[uuid.UUID]models.ToDo{item.Id: item}
 	}
-	return ds.Items[item.UserId][item.Id].data, nil
+	return ds.Items[item.UserId][item.Id], nil
 }
 
 func (ds *inMemDatastore) GetItem(userId string, itemId uuid.UUID) (models.ToDo, error) {
 	ds.mut.Lock()
 	defer ds.mut.Unlock()
 	if item, exists := ds.Items[userId][itemId]; exists {
-		return item.data, nil
+		return item, nil
 	}
 	return models.ToDo{}, &todoerrors.NotFoundError{Message: "ToDo Not Found"}
 }
@@ -70,11 +66,9 @@ func (ds *inMemDatastore) UpdateItem(item models.ToDo) (models.ToDo, error) {
 	defer ds.mut.Unlock()
 
 	if user, exists := ds.Items[item.UserId]; exists {
-		if rec, iexist := user[item.Id]; iexist {
-			rec.Lock()
-			defer rec.Unlock()
-			rec.data = item
-			return ds.Items[item.UserId][item.Id].data, nil
+		if _, iexist := user[item.Id]; iexist {
+			user[item.Id] = item
+			return ds.Items[item.UserId][item.Id], nil
 		}
 	}
 	return models.ToDo{}, &todoerrors.NotFoundError{Message: "ToDo Not Found"}
@@ -85,7 +79,7 @@ func (ds *inMemDatastore) Close() {
 }
 
 func NewInMemDataStore() DataStore {
-	return &inMemDatastore{Items: make(map[string]map[uuid.UUID]*record), mut: sync.Mutex{}}
+	return &inMemDatastore{Items: make(map[string]map[uuid.UUID]models.ToDo), mut: sync.Mutex{}}
 }
 
 func LoadJsonStore(fpath string) map[string]map[uuid.UUID]models.ToDo {
@@ -119,6 +113,7 @@ type JsonDatastore struct {
 }
 
 func (ds *JsonDatastore) AddItem(item models.ToDo) (models.ToDo, error) {
+	item.Id = uuid.New()
 	ds.mut.Lock()
 	defer ds.mut.Unlock()
 	if user, exists := ds.items[item.UserId]; exists {
